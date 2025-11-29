@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>StrokeVision</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
+    <!-- Toastify for notifications -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+
+    <!-- Custom CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+
+    <!-- Additional CSS block for child templates -->
+    {% block extra_css %}{% endblock %}
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js" defer></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+
+    <!-- Additional JavaScript block for child templates -->
+    {% block extra_head_js %}{% endblock %}
+  </head>
+  <body>
+    {% if current_user.is_authenticated %} {% include 'partials/navbar.html' %}
+    {% endif %}
+
+    <!-- Flash Messages -->
+    <div
+      id="flash-messages"
+      style="display: none"
+      data-messages="{{ get_flashed_messages(with_categories=true) | tojson }}"
+    ></div>
+
+    <main
+      class="main-content {% if not current_user.is_authenticated %}centered-content{% endif %}"
+      {%
+      if
+      current_user.is_authenticated
+      %}
+      data-has-patient="{{ 'true' if request.args.get('patient_id') else 'false' }}"
+      {%
+      endif
+      %}
+    >
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Additional JavaScript block at the end of body -->
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
