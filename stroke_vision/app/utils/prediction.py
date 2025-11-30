@@ -11,7 +11,7 @@ class StrokePredictor:
         models_path = base_path.parent / 'static' / 'models'
         
         # Load the model
-        self.model = load_model(models_path / 'stroke_prediction_model_Best.keras')
+        self.model = load_model(models_path / 'stroke_vision_model_Best.keras')
         
         # Load preprocessors
         with open(models_path / 'preprocessors.pkl', 'rb') as f:
