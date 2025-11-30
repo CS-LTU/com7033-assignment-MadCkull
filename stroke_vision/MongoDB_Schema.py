@@ -1,4 +1,5 @@
-from stroke_prediction.app.models.patient import Patient
+#MongoDB_Schema.py
+from app.models.patient import Patient
 from mongoengine import connect
 import os
 from dotenv import load_dotenv
@@ -8,7 +9,7 @@ connect(host=os.getenv("MONGO_URI"))
 
 # Example: Add a test patient record
 test_patient = Patient(
-    patient_id="123456",
+    patient_id="100000000",
     name="John Doe",
     age=45,
     gender="Male",
