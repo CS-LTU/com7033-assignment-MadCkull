@@ -1,0 +1,21 @@
+{% block toolbar_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/toolbar_component.css') }}"
+/>
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+<div class="toolbar-container">
+  <div class="dock" id="toolbar"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/toolbar_component.js') }}"></script>
+<script>
+  // Initialize Lucide icons after the component loads
+  document.addEventListener("DOMContentLoaded", () => {
+    // Icons are created inside toolbar_component.js after rendering,
+    // but if you add static icons elsewhere, call this:
+    if (window.lucide) window.lucide.createIcons();
+  });
+</script>

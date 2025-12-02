@@ -25,3 +25,24 @@
   gap: var(--spacing-md);
   justify-content: center;
 }
+
+.navBar-Container {
+  display: flex;
+  justify-content: flex-end; /* push everything to the right */
+  padding: 5px; /* optional: to avoid hugging edges */
+}
+
+/* App Logo on home page */
+.AppLogoContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.AppLogo {
+  width: 200px;
+  height: auto;
+  /* Add max-width for responsiveness */
+  max-width: 80%;
+}

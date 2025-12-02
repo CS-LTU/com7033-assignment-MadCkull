@@ -1,0 +1,81 @@
+/* Toolbar Component Styles 
+  Note: Reset (* selector) removed to avoid conflicting with global app styles.
+  Body styles removed as they belong to the main layout.
+*/
+
+/* Toolbar Container */
+.toolbar-container {
+  position: fixed; /* Changed to fixed so it stays on screen */
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000; /* Ensure it floats above other content */
+}
+
+/* The Main Dock */
+.dock {
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  gap: 12px;
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  height: 64px; /* Base height */
+  transition: height 0.2s ease;
+  box-sizing: border-box; /* Ensure padding doesn't affect width calculations */
+}
+
+/* Dock Item Wrapper */
+.dock-item {
+  position: relative;
+  width: 40px; /* Base width */
+  height: 40px; /* Base height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #e5e7eb; /* gray-200 */
+  cursor: pointer;
+  transition: width 0.1s ease, height 0.1s ease, transform 0.1s ease;
+  will-change: width, height, transform;
+}
+
+/* The Icon inside the item */
+.dock-icon {
+  width: 50%;
+  height: 50%;
+  color: #525252; /* neutral-600 */
+  pointer-events: none;
+}
+
+/* Tooltip (Label) */
+.dock-label {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  opacity: 0;
+  background-color: #f3f4f6; /* gray-100 */
+  border: 1px solid #e5e7eb;
+  color: #374151; /* neutral-700 */
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  visibility: hidden;
+  z-index: 1010;
+}
+
+/* Show Tooltip on Hover */
+.dock-item:hover .dock-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}

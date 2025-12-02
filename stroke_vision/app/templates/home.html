@@ -5,15 +5,24 @@
   href="{{ url_for('static', filename='css/home.css') }}"
 />
 {% endblock %} {% block content %} {% if current_user.is_authenticated %}
+<div class="navBar-Container">{% include 'partials/navBar.html' %}</div>
+<div class="AppLogoContainer">
+  <img
+    class="AppLogo"
+    src="{{ url_for('static', filename='assets/StrokeVisionIcon.png') }}"
+    alt="StrokeVision Logo"
+  />
+</div>
 <div class="Search-Manager-Container">
   {% include 'partials/search_manager.html' %}
 </div>
+
+<div class="toolBar-Container">{% include 'partials/toolBar.html' %}</div>
 <!-- If User is not Logged-in -->
 {% else %}
 <div class="welcome-container fade-in">
   <div class="welcome-logo">
-    <span class="material-icons">health_and_safety</span>
-    <h1>Welcome to StrokeVision</h1>
+    <<span class="material-icons">health_and_safety</span>>
   </div>
   <p class="welcome-text">Please sign in to access the system.</p>
   <div class="welcome-actions">

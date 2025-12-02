@@ -18,8 +18,8 @@ body {
 
 /* Layout */
 .main-content {
-  padding: var(--spacing-lg);
-  margin-top: 1rem;
+  max-height: 100vh !important;
+  overflow: hidden;
 }
 
 .centered-content {

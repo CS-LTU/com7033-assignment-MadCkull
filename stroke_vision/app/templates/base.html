@@ -44,7 +44,11 @@
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/navbar.css') }}"
+      href="{{ url_for('static', filename='css/navBar.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/toolBar.css') }}"
     />
     <link
       rel="stylesheet"
@@ -88,6 +92,14 @@
     <script
       src="{{ url_for('static', filename='js/utils.js') }}"
       defer
+    ></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/navBar.js') }}"
+    ></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/toolBar.js') }}"
     ></script>
     <script
       src="{{ url_for('static', filename='js/render_patients_list.js') }}"

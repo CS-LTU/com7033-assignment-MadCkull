@@ -1,0 +1,44 @@
+{% block patientlist_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/patient_list.css') }}"
+/>
+{% endblock %}
+
+<!-- Patient List Template Structure -->
+<template id="patient-list-template">
+  <div class="list-header">
+    <h2>Patient Records Overview</h2>
+    <button class="back-button" onclick="handleViewNavigation(event, 'search')">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+  </div>
+  <div class="list-column-headers">
+    <span>ID</span>
+    <span>Name</span>
+    <span>Age</span>
+    <span>Gender</span>
+    <span>Risk Level</span>
+    <span>Added On</span>
+    <span></span>
+  </div>
+  <div id="patient-list-data-container">
+    <p style="text-align: center; padding: 12px; color: #999">
+      Loading patients...
+    </p>
+  </div>
+  <div
+    id="list-loading-indicator"
+    style="text-align: center; padding: 12px; color: #666; display: none"
+  >
+    Loading more...
+  </div>
+</template>
