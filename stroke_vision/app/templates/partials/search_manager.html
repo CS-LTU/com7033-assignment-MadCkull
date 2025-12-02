@@ -1,0 +1,137 @@
+{% block searchmanager_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/search_manager.css') }}"
+/>
+{% endblock %}
+
+<div class="SearchComponent">
+  <!-- SVG Filter Definition (visual flourish, harmless) -->
+  <svg class="svg-filters" aria-hidden="true">
+    <defs>
+      <filter id="blob">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7.5" result="blur" />
+        <feColorMatrix
+          in="blur"
+          mode="matrix"
+          values="1 0 0 0 0
+            0 1 0 0 0
+            0 0 1 0 0
+            0 0 0 35 -15"
+          result="goo"
+        />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="main-ui-container" id="mainUiContainer">
+    <!-- Spotlight Search Bar Component (Primary View) -->
+    <div class="gooey-container" id="spotlightContainer">
+      <div class="gooey-content">
+        <div class="search-container" role="region" aria-label="Patient search">
+          <div class="input-wrapper">
+            <svg
+              class="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+
+            <div class="input-content">
+              <div class="placeholder-text entering" id="placeholder">
+                Search
+              </div>
+              <!--
+                NOTE: JS will:
+                  - read mainUiContainer.dataset.suggestionsUrl
+                  - call the suggestions API with ?q=...
+                  - render results into #resultsContainer with role="option"
+              -->
+              <input
+                type="text"
+                id="searchInput"
+                autocomplete="off"
+                spellcheck="false"
+                aria-controls="resultsContainer"
+                aria-autocomplete="list"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              />
+            </div>
+          </div>
+
+          <!-- Results container (populated by JS) -->
+          <div
+            id="resultsContainer"
+            class="results-container"
+            role="listbox"
+            aria-label="Search results"
+            tabindex="-1"
+          ></div>
+        </div>
+
+        <!-- Shortcut Buttons -->
+        <div class="shortcut-group" id="shortcutGroup" aria-hidden="false">
+          <a
+            href="/add"
+            class="shortcut-btn"
+            data-label="Add Patient"
+            onclick="handleShortcutClick(event, 'add')"
+          >
+            <!-- Icon: User Plus -->
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+          </a>
+
+          <a
+            href="#/list"
+            class="shortcut-btn"
+            data-label="Show Patient List"
+            onclick="handleShortcutClick(event, 'list')"
+          >
+            <!-- Icon: Users -->
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- END Spotlight Search Bar Component -->
+
+    <!-- Dynamic View Root (list/details/edit/add will be injected here) -->
+    <div class="app-view-root" id="appViewRoot" role="main" aria-live="polite">
+      <!-- JS will render patient list, details, add/edit views here -->
+    </div>
+    <!-- END Dynamic View Root -->
+  </div>
+</div>

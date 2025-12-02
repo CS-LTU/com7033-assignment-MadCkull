@@ -1,0 +1,564 @@
+:root {
+  --bg-body: #ffffff;
+  --bg-component: #f5f5f5; /* neutral-100 */
+  --text-primary: #000000;
+  --text-secondary: #737373; /* gray-500 */
+  --color-accent: #3b82f6; /* Blue-500 */
+  --size-h: 64px;
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- LAYOUT CONTAINERS --- */
+
+.SearchComponent {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Centers the inner gooey container */
+  position: relative;
+  z-index: 100;
+}
+
+/* General Layout Container */
+.main-ui-container {
+  width: 100%;
+  max-width: 1200px; /* Constrain width on large screens */
+  min-height: 100vh; /* Full viewport height */
+  margin: 0 auto;
+  position: relative;
+  padding: 20px;
+  box-sizing: border-box; /* Ensures padding doesn't overflow width */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* --- SPOTLIGHT SEARCH BAR STYLES --- */
+
+.gooey-container {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center; /* Centers the search bar */
+  gap: 16px;
+  will-change: transform, opacity;
+  width: 100%;
+  max-width: 600px; /* Matches the search bar max width */
+  padding: 20px 0; /* Add vertical breathing room */
+  margin-bottom: 20px;
+  transition: transform 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+}
+
+/* State: When the list is active, hide the search container */
+.main-ui-container.view-active .gooey-container {
+  opacity: 0;
+  transform: translateY(40px);
+  pointer-events: none;
+  margin-bottom: -64px; /* Pulls content up when search hides */
+  padding: 0;
+  transition-delay: 0s;
+}
+
+.gooey-content {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  position: relative;
+  filter: url(#blob);
+}
+
+.search-container {
+  background-color: var(--bg-component);
+  height: var(--size-h);
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  width: 100%;
+  max-width: 600px;
+
+  transition: width 0.5s var(--ease-spring), height 0.4s var(--ease-out),
+    border-radius 0.4s ease;
+  transition-delay: 0.1s;
+}
+
+.gooey-container.hover-active:not(.typing-active) .search-container {
+  width: 445px; /* Animation state width */
+}
+
+.gooey-container.typing-active .search-container {
+  width: 100%; /* Full width of parent */
+  max-width: 800px; /* Expand slightly wider when typing */
+  height: auto;
+  min-height: var(--size-h);
+  border-radius: 24px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  height: var(--size-h);
+  padding: 0 24px;
+  width: 100%;
+  gap: 12px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  color: black;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.input-content {
+  position: relative;
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden; /* Prevents long text from breaking layout */
+}
+
+input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 20px;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 2;
+}
+
+.placeholder-text {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out,
+    filter 0.2s ease-out;
+  transform-origin: left center;
+  white-space: nowrap;
+}
+
+.placeholder-text.hidden {
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(5px);
+}
+
+.placeholder-text.exiting {
+  opacity: 0;
+  transform: translateY(-10px);
+  filter: blur(5px);
+}
+
+.placeholder-text.entering {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.shortcut-group {
+  display: flex;
+  gap: 16px;
+  position: absolute;
+  left: 76%;
+  top: 0;
+  height: var(--size-h);
+  pointer-events: none;
+  z-index: 30;
+}
+
+.shortcut-btn {
+  width: var(--size-h);
+  height: var(--size-h);
+  border-radius: 50%;
+  background-color: var(--bg-component);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(calc(-100% - 16px)) scale(0.7);
+  transition: transform 0.6s var(--ease-spring), opacity 0.6s ease;
+}
+
+.shortcut-btn:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  opacity: 1 !important;
+}
+
+.shortcut-btn svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 1.4;
+  color: black;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+.shortcut-btn:hover svg {
+  opacity: 1;
+}
+
+.gooey-container.hover-active:not(.typing-active) .shortcut-group {
+  pointer-events: auto;
+}
+
+.gooey-container.hover-active:not(.typing-active) .shortcut-btn {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.shortcut-btn:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.shortcut-btn:nth-child(2) {
+  transition-delay: 0.2s;
+}
+
+.results-container {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-component);
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  padding: 8px;
+  max-height: 384px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.gooey-container.typing-active .results-container {
+  display: flex;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.result-item:hover {
+  background: white;
+  box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.05);
+}
+.result-icon-box {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.result-icon-box svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+  color: black;
+}
+.result-text {
+  flex: 1;
+  min-width: 0; /* Text truncation fix */
+}
+.result-label {
+  font-weight: 500;
+  font-size: 16px;
+  color: black;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.result-arrow {
+  opacity: 0;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+.result-item:hover .result-arrow {
+  opacity: 1;
+}
+
+/* --- DYNAMIC VIEW ROOT STYLES (Fixed Layout) --- */
+
+.app-view-root {
+  /* Removed absolute positioning to restore document flow */
+  position: relative;
+  width: 100%;
+  max-width: 1000px; /* Prevent it from getting too wide */
+  background-color: var(--bg-component);
+  border-radius: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-height: 500px;
+  box-sizing: border-box;
+  margin: 0 auto; /* Horizontally center */
+
+  /* Initial Hidden State */
+  opacity: 0;
+  height: 0; /* Collapse height when hidden */
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.4s ease 0.1s;
+}
+
+/* State: When a view is active, show it */
+.main-ui-container.view-active .app-view-root {
+  opacity: 1;
+  height: auto; /* Restore height */
+  overflow: visible;
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 0.4s ease 0.3s;
+}
+
+.list-header,
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+}
+
+.list-header h2,
+.form-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.back-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s;
+}
+.back-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.back-button svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+}
+
+/* --- RESPONSIVE LIST GRID --- */
+
+.list-column-headers,
+.patient-row {
+  display: grid;
+  /* Default Grid (Desktop) */
+  grid-template-columns: 80px 1fr 60px 80px 120px 120px 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+#patient-list-data-container {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.list-column-headers {
+  font-size: 12px;
+  font-weight: 500;
+  color: #525252;
+  text-transform: uppercase;
+}
+
+.patient-row {
+  margin-bottom: 4px;
+  border-radius: 12px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.patient-row:hover {
+  background: white;
+  box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.05);
+}
+
+.patient-id {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.patient-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.patient-age,
+.patient-gender {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.patient-date {
+  font-size: 13px;
+  color: #525252;
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  color: white;
+  min-width: 60px;
+  width: 100%; /* Fill cell */
+  box-sizing: border-box;
+}
+
+/* Risk Colors */
+.risk-low {
+  background-color: #10b981;
+} /* Emerald-500 */
+.risk-medium {
+  background-color: #f59e0b;
+} /* Amber-500 */
+.risk-high {
+  background-color: #ef4444;
+} /* Red-500 */
+
+.details-icon {
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  justify-content: flex-end;
+}
+.patient-row:hover .details-icon {
+  opacity: 1;
+}
+.details-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Form/Details View Styling */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 0 16px;
+}
+
+/* Stack form on mobile */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 16px 0;
+}
+.form-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+.form-btn.primary {
+  background-color: var(--color-accent);
+  color: white;
+}
+.form-btn.primary:hover {
+  background-color: #2563eb;
+}
+.form-btn.secondary {
+  background-color: var(--bg-component);
+  color: var(--text-primary);
+  margin-right: 10px;
+}
+.form-btn.secondary:hover {
+  background-color: #e5e5e5;
+}
+
+/* --- SVG Filters (Crucial for Gooey Effect) --- */
+.svg-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}

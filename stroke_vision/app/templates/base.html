@@ -71,12 +71,20 @@
       href="{{ url_for('static', filename='css/search_components.css') }}"
     />
 
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/search_manager.css') }}"
+    />
+
     <!-- Additional CSS block for child templates -->
     {% block extra_css %}{% endblock %}
 
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js" defer></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
     <script
       src="{{ url_for('static', filename='js/utils.js') }}"
       defer
@@ -86,27 +94,27 @@
       defer
     ></script>
 
+    <script
+      src="{{ url_for('static', filename='js/search_manager.js') }}"
+      defer
+    ></script>
+
     <!-- Additional JavaScript block for child templates -->
     {% block extra_head_js %}{% endblock %}
   </head>
   <body>
-    {% if current_user.is_authenticated %} {% include 'partials/navbar.html' %}
-    {% endif %}
-
     <!-- Flash Messages -->
-    <div
-      id="flash-messages"
-      style="display: none"
-      data-messages="{{ get_flashed_messages(with_categories=true) | tojson }}"
-    ></div>
+    <script>
+      // server -> JS: always a JS array (never a broken JSON string)
+      window.FLASH_NOTIFICATIONS = {{ get_flashed_messages(with_categories=True) | default([]) | tojson | safe }};
+    </script>
 
     <main
       class="main-content {% if not current_user.is_authenticated %}centered-content{% endif %}"
       {%
       if
       current_user.is_authenticated
-      %}
-      data-has-patient="{{ 'true' if request.args.get('patient_id') else 'false' }}"
+      %}data-has-patient="{{ 'true' if request.args.get('patient_id') else 'false' }}"
       {%
       endif
       %}

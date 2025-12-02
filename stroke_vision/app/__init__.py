@@ -20,20 +20,20 @@ csrf = CSRFProtect()
 # Load environment variables from .env file
 load_dotenv()
 
+
 def create_app():
     app = Flask(__name__)
-    
 
     # Configurations
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLITE_DATABASE_URI')
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLITE_DATABASE_URI")
     app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-    
+
     # CSRF specific configurations
-    app.config['WTF_CSRF_ENABLED'] = True
-    app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour
-    app.config['WTF_CSRF_SSL_STRICT'] = True
-    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    app.config["WTF_CSRF_ENABLED"] = True
+    app.config["WTF_CSRF_TIME_LIMIT"] = 3600  # 1 hour
+    app.config["WTF_CSRF_SSL_STRICT"] = True
+    app.config["WTF_CSRF_CHECK_DEFAULT"] = True
 
     # Initialize extensions with app
     db.init_app(app)
@@ -48,15 +48,20 @@ def create_app():
 
     # Import and register blueprints
     from app.views.auth import auth
-    app.register_blueprint(auth, url_prefix='/auth')
+
+    app.register_blueprint(auth, url_prefix="/auth")
 
     from app.views.profile import profile
-    app.register_blueprint(profile, url_prefix='/profile')
+
+    app.register_blueprint(profile, url_prefix="/profile")
 
     from app.views.process_patient import patient_bp
-    app.register_blueprint(patient_bp, url_prefix='/patient')
 
-    
+    app.register_blueprint(patient_bp, url_prefix="/patient")
+
+    from app.views.search_manager import search_bp
+
+    app.register_blueprint(search_bp)  # mounted at /api/patients by the blueprint
 
     # Connect to MongoDB
     connect(host=app.config["MONGO_URI"])
@@ -64,45 +69,44 @@ def create_app():
     # Error handlers
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        return jsonify({
-            "error": "CSRF token missing or invalid",
-            "message": str(e)
-        }), 400
+        return jsonify(
+            {"error": "CSRF token missing or invalid", "message": str(e)}
+        ), 400
 
     @app.errorhandler(400)
     def handle_bad_request(e):
-        return jsonify({
-            "error": "Bad Request",
-            "message": str(e)
-        }), 400
+        return jsonify({"error": "Bad Request", "message": str(e)}), 400
 
     @app.errorhandler(500)
     def handle_server_error(e):
-        return jsonify({
-            "error": "Internal Server Error",
-            "message": "An unexpected error occurred"
-        }), 500
+        return jsonify(
+            {
+                "error": "Internal Server Error",
+                "message": "An unexpected error occurred",
+            }
+        ), 500
 
     # Add CSRF token to response headers
     @app.after_request
     def add_csrf_header(response):
-        if 'text/html' in response.headers.get('Content-Type', ''):
+        if "text/html" in response.headers.get("Content-Type", ""):
             response.set_cookie(
-                'csrf_token',
+                "csrf_token",
                 generate_csrf(),  # Using the imported generate_csrf function
                 secure=True,
-                samesite='Strict',
-                httponly=True
+                samesite="Strict",
+                httponly=True,
             )
         return response
 
     @login_manager.user_loader
     def load_user(user_id):
         from app.models.user import User
+
         return User.query.get(int(user_id))
 
-    @app.route('/')
+    @app.route("/")
     def home():
-        return render_template('home.html')
+        return render_template("home.html")
 
     return app

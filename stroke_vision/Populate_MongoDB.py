@@ -98,7 +98,7 @@ def generate_patient_data():
 
 
 def generate_database(num_records=5460):
-    connect("stroke_vision")
+    connect("StrokeDB")
 
     for _ in range(num_records):
         try:

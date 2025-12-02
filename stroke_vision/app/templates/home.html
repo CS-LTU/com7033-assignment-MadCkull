@@ -5,54 +5,9 @@
   href="{{ url_for('static', filename='css/home.css') }}"
 />
 {% endblock %} {% block content %} {% if current_user.is_authenticated %}
-<div class="search-container fade-in" id="main-search">
-  <div class="search-logo">
-    <span class="material-icons">health_and_safety</span>
-    <h1>StrokeVision</h1>
-  </div>
-
-  <form
-    method="get"
-    id="main-search-form"
-    class="search-form"
-    action="{{ url_for('patient.search_patient') }}"
-  >
-    <div class="search-input-container">
-      <input
-        type="text"
-        id="main-patient-id"
-        name="patient_id"
-        placeholder="Enter Patient ID"
-        required
-      />
-      <button type="submit" class="btn btn-primary search-button">
-        <span class="material-icons">search</span>
-      </button>
-      {% if current_user.role in ['admin', 'doctor'] %}
-      <div class="search-divider"></div>
-      <a href="{{ url_for('patient.add_patient') }}" class="btn btn-primary">
-        <span class="material-icons">add</span>
-        Add Patient
-      </a>
-      <a
-        class="btn btn-primary patient-list-toggle"
-        onclick="togglePatientList(this)"
-      >
-        <span class="material-icons">format_list_bulleted</span>
-      </a>
-      {% endif %}
-    </div>
-  </form>
+<div class="Search-Manager-Container">
+  {% include 'partials/search_manager.html' %}
 </div>
-
-<!-- Show Patient List -->
-<div class="patient-list-section">
-  <div class="Patient-List-Container hidden">
-    <!-- Include patient_list template -->
-    {% include 'patient/patient_list.html' %}
-  </div>
-</div>
-
 <!-- If User is not Logged-in -->
 {% else %}
 <div class="welcome-container fade-in">
