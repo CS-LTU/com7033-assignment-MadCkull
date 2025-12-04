@@ -1,0 +1,57 @@
+<div id="patientListContainer" class="patient-list-view-container">
+  <div class="list-header">
+    <h2>Patient Records Overview</h2>
+    <button class="back-button" onclick="handleViewNavigation(event, 'search')">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <!-- List Columns Header -->
+  <div class="list-column-headers">
+    <span>ID</span>
+    <span>Name</span>
+    <span>Age</span>
+    <span>Gender</span>
+    <span>Risk Level</span>
+    <span>Added On</span>
+    <span></span>
+  </div>
+
+  <!-- The main container where rows will be appended by JS -->
+  <div id="patientList" class="patient-list-rows">
+    <!-- Placeholder elements are defined here -->
+
+    <!-- 1. Initial Loader (Visible on first load only) -->
+    <div id="listInitialLoader" class="list-placeholder text-center">
+      <p style="padding: 12px; color: #666; font-style: italic">
+        Fetching initial patient list...
+      </p>
+    </div>
+
+    <!-- 2. Empty Message (Hidden by default) -->
+    <div id="listEmptyMessage" class="list-placeholder text-center hidden">
+      <p style="padding: 12px; color: #999">No patient records found.</p>
+    </div>
+  </div>
+
+  <!-- 3. Scroll Sentinel (Invisible target for Intersection Observer) -->
+  <div id="scrollSentinel" style="height: 1px"></div>
+
+  <!-- 4. Load More Spinner (Used for subsequent infinite scrolling loads) -->
+  <div
+    id="listLoadMoreSpinner"
+    class="list-placeholder text-center hidden"
+    style="padding: 12px; color: #666"
+  >
+    Loading more...
+  </div>
+</div>

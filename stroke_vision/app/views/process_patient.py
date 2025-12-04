@@ -1,5 +1,5 @@
 # views/process_patient.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, url_for, request, jsonify
 from app.forms.patient_form import PatientForm
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
@@ -12,6 +12,18 @@ import json
 
 patient_bp = Blueprint("patient", __name__)
 stroke_predictor = StrokePredictor()
+
+# =======================================================
+# UTILITIES AND HELPERS
+# =======================================================
+
+
+def is_ajax_request():
+    """
+    Checks if the request is an AJAX request from the client-side router
+    by checking the 'X-Requested-With' header set by app_router.js.
+    """
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 def map_binary_to_yes_no(value):
@@ -83,16 +95,171 @@ class NumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-@patient_bp.route("/add", methods=["GET"])
+# =======================================================
+# NEW DATA API ENDPOINT (For client-side data fetching)
+# Route changed from /api/patients/data to /api/data
+# Full URL: /patient/api/data
+# =======================================================
+
+
+@patient_bp.route("/api/data", methods=["GET"])
 @login_required
-def add_patient():
+def api_patient_data():
+    """Fetches paginated patient data as JSON for the client-side list rendering."""
+    # ⚠️ ADDED: Security check to ensure this data endpoint is accessed via AJAX
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to data API"}), 403
+
+    try:
+        page = request.args.get("page", 1, type=int)
+        # We set a fixed limit per page for infinite scroll
+        limit = 20
+        skip = (page - 1) * limit
+
+        # 1. Fetch data (ordered by latest entry date)
+        patients = (
+            Patient.objects.order_by("-record_entry_date").skip(skip).limit(limit)
+        )
+        total_count = Patient.objects.count()
+
+        # 2. Prepare JSON response
+        patient_list = []
+        for patient in patients:
+            patient_list.append(
+                {
+                    "id": str(patient.id),  # MongoDB internal ID
+                    "patient_id": patient.patient_id,  # User-facing ID
+                    "name": patient.name,
+                    "age": patient.age,
+                    "gender": patient.gender,
+                    # Reuse the existing helper function
+                    "risk_level": get_risk_level(patient.stroke_risk),
+                    "added_on": patient.record_entry_date.strftime("%Y-%m-%d"),
+                    "stroke_risk": patient.stroke_risk,  # Needed for details link
+                }
+            )
+
+        return jsonify(
+            {
+                "patients": patient_list,
+                "page": page,
+                "limit": limit,
+                # Simple check if there's more data to load
+                "has_next": (page * limit) < total_count,
+                "total_count": total_count,
+            }
+        )
+
+    except Exception as e:
+        print(f"Error fetching patient data: {str(e)}")
+        return jsonify(
+            {"success": False, "message": "Failed to load patient data."}
+        ), 500
+
+
+# =======================================================
+# NEW API VIEW ROUTES (For Client-Side Router)
+# Routes changed from /api/views/... to /views/...
+# Full URLs: /patient/views/list, /patient/views/add, etc.
+# =======================================================
+
+
+@patient_bp.route("/views/list", methods=["GET"])
+@login_required
+def api_patient_list_view():
+    """Renders the HTML container/shell for the Patient List view."""
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to API view"}), 403
+
+    # We assume 'patient/patient_list_fragment.html' is a minimal template
+    # that doesn't extend base.html.
+    return render_template("patient/patient_list_fragment.html")
+
+
+@patient_bp.route("/views/add", methods=["GET"])
+@login_required
+def api_add_patient_view():
+    """Renders the HTML fragment for the Add Patient form."""
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to API view"}), 403
+
     form = PatientForm()
-    return render_template("patient/add_patient.html", form=form)
+    # We assume 'patient/add_patient_fragment.html' is a partial version
+    return render_template("patient/add_patient_fragment.html", form=form)
+
+
+@patient_bp.route("/views/details/<patient_id>", methods=["GET"])
+@login_required
+def api_details_patient_view(patient_id):
+    """Fetches patient data and renders the HTML fragment for the details view."""
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to API view"}), 403
+
+    patient = Patient.objects(patient_id=patient_id).first()
+    if not patient:
+        return jsonify({"error": "Patient not found"}), 404
+
+    # Map model fields to user-friendly format before passing to template
+    patient_data = {
+        "patient_id": patient.patient_id,
+        "name": patient.name,
+        "age": patient.age,
+        "gender": patient.gender,
+        "ever_married": patient.ever_married,
+        "work_type": patient.work_type,
+        "residence_type": patient.residence_type,
+        "heart_disease": patient.heart_disease,
+        "hypertension": patient.hypertension,
+        "avg_glucose_level": patient.avg_glucose_level,
+        "bmi": patient.bmi,
+        "smoking_status": patient.smoking_status,
+        "stroke_risk": patient.stroke_risk,
+        "risk_level": get_risk_level(patient.stroke_risk),
+        # Ensure date fields are formatted as strings for Jinja/JS
+        "record_entry_date": patient.record_entry_date.strftime("%b %d, %Y")
+        if patient.record_entry_date
+        else "N/A",
+        "created_by": patient.created_by,
+        "updated_at": patient.record_last_updated.strftime("%b %d, %Y")
+        if patient.record_last_updated
+        else "N/A",
+    }
+
+    # We assume 'patient/patient_details_fragment.html' is a partial version
+    return render_template(
+        "patient/patient_details_fragment.html", patient=patient_data
+    )
+
+
+@patient_bp.route("/views/edit/<patient_id>", methods=["GET"])
+@login_required
+def api_edit_patient_view(patient_id):
+    """Fetches patient data and renders the HTML fragment for the Edit Patient form."""
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to API view"}), 403
+
+    patient = Patient.objects(patient_id=patient_id).first()
+    if not patient:
+        return jsonify({"error": "Patient not found"}), 404
+
+    # The form object handles pre-filling data correctly
+    form = PatientForm(obj=patient)
+    # We assume 'patient/edit_patient_fragment.html' is a partial version
+    return render_template(
+        "patient/edit_patient_fragment.html", form=form, patient=patient
+    )
+
+
+# =======================================================
+# EXISTING ROUTES (Kept for form submission/legacy API)
+# (Unchanged as they don't impact the new routing scheme directly)
+# =======================================================
 
 
 @patient_bp.route("/predict", methods=["POST"])
 @login_required
 def predict_risk():
+    # ... (content remains the same)
     try:
         # Extract form values (these will be the same whether Add or Edit)
         form_age = request.form.get("age")
@@ -231,46 +398,11 @@ def predict_risk():
             {"success": False, "message": f"An unexpected error occurred: {str(e)}"}
         ), 500
 
-    # show list of patients
-
-
-@patient_bp.route("/edit/<patient_id>", methods=["GET", "POST"])
-@login_required
-def edit_patient(patient_id):
-    patient = Patient.objects(patient_id=patient_id).first()
-    if not patient:
-        flash("Patient not found", "warning")
-        return redirect(url_for("home"))
-
-    form = PatientForm(obj=patient)  # Prefill form with patient data
-
-    if request.method == "POST":
-        # Update patient data from form
-        try:
-            patient.name = form.name.data
-            patient.age = form.age.data
-            patient.gender = form.gender.data
-            patient.ever_married = form.ever_married.data
-            patient.work_type = map_work_type(form.work_type.data)
-            patient.residence_type = form.residence_type.data
-            patient.heart_disease = map_binary_to_yes_no(form.heart_disease.data)
-            patient.hypertension = map_binary_to_yes_no(form.hypertension.data)
-            patient.avg_glucose_level = float(form.avg_glucose_level.data)
-            patient.bmi = float(form.bmi.data)
-            patient.smoking_status = map_smoking_status(form.smoking_status.data)
-
-            patient.save()
-            flash("Patient updated successfully", "success")
-            return redirect(url_for("home"))
-        except Exception as e:
-            flash(f"Error updating patient: {str(e)}", "danger")
-
-    return render_template("patient/edit_patient.html", form=form, patient=patient)
-
 
 @patient_bp.route("/delete/<patient_id>", methods=["POST"])
 @login_required
 def delete_patient(patient_id):
+    # This is already a JSON API endpoint, so no changes needed here.
     try:
         # Check if user is admin
         if current_user.role != "admin":
@@ -306,6 +438,7 @@ def delete_patient(patient_id):
 @patient_bp.route("/count", methods=["GET"])
 @login_required
 def patients_count():
+    # This is already a JSON API endpoint, so no changes needed here.
     try:
         count = Patient.objects.count()
         return jsonify({"count": count})

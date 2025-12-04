@@ -1,4 +1,3 @@
-<!-- home.html -->
 {% extends "base.html" %} {% block extra_css %}
 <link
   rel="stylesheet"
@@ -13,18 +12,23 @@
     alt="StrokeVision Logo"
   />
 </div>
+
 <div class="Search-Manager-Container">
   {% include 'partials/search_manager.html' %}
 </div>
 
 <div class="toolBar-Container">{% include 'partials/toolBar.html' %}</div>
-<!-- If User is not Logged-in -->
+
+<div id="appViewRoot" class="view-container"></div>
+
 {% else %}
 <div class="welcome-container fade-in">
   <div class="welcome-logo">
-    <<span class="material-icons">health_and_safety</span>>
+    <span class="material-icons">health_and_safety</span>
   </div>
+
   <p class="welcome-text">Please sign in to access the system.</p>
+
   <div class="welcome-actions">
     <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
     <a href="{{ url_for('auth.register') }}" class="btn btn-secondary"
@@ -32,11 +36,4 @@
     >
   </div>
 </div>
-{% endif %}
-
-<div id="patient-details" class="patient-details-container">
-  {% block search_result %}{% endblock %}
-</div>
-{% endblock %} {% block extra_js %}
-<!-- script src="{{ url_for('static', filename='js/home.js') }}" defer></script-->
-{% endblock %}
+{% endif %} {% endblock %} {% block extra_js %} {% endblock %}

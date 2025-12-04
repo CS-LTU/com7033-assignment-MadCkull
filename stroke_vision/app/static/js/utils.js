@@ -1,47 +1,152 @@
-function editPatient(patientId, row = null) {
-  window.location.href = `/patient/edit/${patientId}`;
-}
+// =======================================================
+// utils.js (Global Helpers and Utilities)
+// Note: All functions and constants are wrapped in IIFE
+// to prevent global scope conflicts. Only necessary functions
+// are exposed via the 'window' object.
+// =======================================================
 
-function deletePatient(patientId, row = null) {
-  if (
-    confirm(
-      "Patient ID: SW" +
-        patientId +
-        "\nAre you sure you want to delete this patient record?"
-    )
-  ) {
-    fetch(`/patient/delete/${patientId}`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
-          .content,
-        "Content-Type": "application/json",
-      },
-      credentials: "same-origin",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          if (row) {
-            // Delete from list view
-            showToast("Patient record deleted successfully", "success");
-            row.remove();
-            totalPatients = totalPatients.filter(
-              (p) => p.patient_id !== patientId
-            );
-            totalPatientsCount();
-          } else {
-            // Delete from details view
-            window.location.href = data.redirect;
-            // Toast will show after redirect
-          }
-        } else {
-          showToast(data.message || "Error deleting record", "danger");
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        showToast("Error deleting patient record", "danger");
-      });
+(function () {
+  // ------------------------------------------------------
+  // --- OLD FUNCTIONS REMOVED/MIGRATED ---
+  // The old editPatient and deletePatient functions were removed.
+  // The edit logic is replaced by window.handleViewNavigation in app_router.js.
+  // The delete logic will be implemented later using the new API route.
+  // ------------------------------------------------------
+
+  // --- General Utility Helpers ---
+
+  /**
+   * Helper for debounce (to prevent API spamming while typing)
+   */
+  function debounce(fn, wait) {
+    let t = null;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
   }
-}
+
+  /**
+   * Helper for fetching JSON from Flask API (Used by search_manager and patient_list)
+   */
+  async function fetchJson(url) {
+    // Retrieve the CSRF token from the meta tag
+    const csrfToken = document.querySelector(
+      'meta[name="csrf-token"]'
+    )?.content;
+
+    const resp = await fetch(url, {
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        // Include CSRF token for security
+        "X-CSRFToken": csrfToken,
+        // Send a custom header to Flask to request partial templates for form/details
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        throw new Error("Resource not found.");
+      }
+      throw new Error(`Fetch ${url} failed: ${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  /**
+   * Helper for displaying Toastify notifications (Assuming Toastify library is loaded)
+   */
+  function showToast(message, type = "info") {
+    if (typeof Toastify !== "undefined") {
+      const classes = {
+        success: "bg-success",
+        danger: "bg-danger",
+        warning: "bg-warning",
+        info: "bg-info",
+      };
+      Toastify({
+        text: message,
+        duration: 3000,
+        close: true,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissal on focus
+        style: {
+          background: classes[type] || classes.info,
+        },
+      }).showToast();
+    } else {
+      console.warn(`Toastify not loaded: ${message}`);
+    }
+  }
+
+  // --- UI Utility Helpers ---
+
+  const placeholder = document.getElementById("placeholder");
+  // NOTE: This function handles the placeholder text animation (used by search_manager and router)
+  function changePlaceholder(text) {
+    if (!placeholder) return;
+    if (placeholder.innerText === text && text !== "") return;
+
+    if (text === "") {
+      placeholder.classList.add("hidden");
+      placeholder.classList.remove("entering", "exiting");
+      return;
+    }
+
+    if (placeholder.classList.contains("hidden")) {
+      placeholder.classList.remove("hidden");
+      placeholder.innerText = text;
+      placeholder.classList.add("entering");
+      placeholder.classList.remove("exiting");
+      return;
+    }
+
+    placeholder.classList.add("exiting");
+    placeholder.classList.remove("entering");
+
+    setTimeout(() => {
+      placeholder.innerText = text;
+      placeholder.classList.remove("exiting");
+      placeholder.classList.add("entering");
+    }, 200);
+  }
+
+  // --- Data Formatting Helpers (Used by future detail/list components) ---
+
+  function getRiskLevel(score) {
+    if (score >= 13) return { label: "High Risk", class: "risk-high" };
+    if (score >= 6) return { label: "Medium Risk", class: "risk-medium" };
+    return { label: "Low Risk", class: "risk-low" };
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  // 🌟 Expose all necessary functions globally for access by other modules
+  window.debounce = debounce;
+  window.fetchJson = fetchJson;
+  window.changePlaceholder = changePlaceholder;
+  window.getRiskLevel = getRiskLevel;
+  window.formatDate = formatDate;
+  window.showToast = showToast;
+
+  // Process flashed messages from the server on initial page load
+  window.addEventListener("DOMContentLoaded", () => {
+    if (window.FLASH_NOTIFICATIONS && window.FLASH_NOTIFICATIONS.length > 0) {
+      window.FLASH_NOTIFICATIONS.forEach(([category, message]) => {
+        showToast(message, category);
+      });
+      // Clear the array after showing them
+      window.FLASH_NOTIFICATIONS = [];
+    }
+  });
+})(); // End of IIFE

@@ -1,0 +1,32 @@
+/* * rootView.css
+ * Styles for the general content area that wraps the dynamic views (e.g., list, details, add).
+ * This acts as the inner padding and max-width limiter for the content inside the appViewRoot card.
+ */
+
+/* The class applied to the outermost element of the dynamic fragment */
+.view-content-wrapper {
+  /* Ensures the list takes up the available space within the appViewRoot */
+  padding: 20px;
+  /* Sets the maximum width for the content for better readability on large screens */
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Allows inner elements to take full height */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* General style for placeholder elements (e.g., loading and empty messages) */
+.list-placeholder {
+  padding: 15px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Default spin animation for loading indicators */
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,175 +1,202 @@
 // =======================================================
-// PATIENT LIST MODULE
+// patient_list.js (List Data Fetching and Rendering)
+// Dependencies: app_router.js (calls loadPatientListAndAttachScroll)
 // =======================================================
 
-// List State
-let listPage = 1;
-let listHasMore = false;
-let listLoading = false;
-const listContainerId = "patient-list-data-container";
+let currentPage = 0;
+let hasMore = true;
+let isFetching = false;
+let observer = null;
 
-// Constants (should match search_manager.js)
-const LIST_URL = "/api/patients/list";
-const LIST_LIMIT = 28;
+// Removed global DOM references as they will be null when the script first runs.
+// The references are now created inside loadPatientListAndAttachScroll.
 
 /**
- * Generate HTML for a single patient row
+ * Creates the HTML markup for a single patient row.
  */
-function patientListRowHtml(p) {
-  // p: { patient_id, name, age, gender, stroke_risk, record_entry_date }
-  const added = p.record_entry_date
-    ? new Date(p.record_entry_date).toLocaleDateString()
-    : "";
-  // ensure risk is a number for the helper
-  const risk = Math.round(Number(p.stroke_risk) || 0);
-  const riskStatus = getRiskLevel(risk);
-
-  return `
-    <a href="#/details/${
-      p.patient_id
-    }" class="patient-row" onclick="handleViewNavigation(event, 'details', '${
-    p.patient_id
-  }')">
-      <span class="patient-id">${p.patient_id}</span>
-      <span class="patient-name">${p.name}</span>
-      <span class="patient-age">${p.age || ""}</span>
-      <span class="patient-gender">${p.gender || ""}</span>
-      <span class="risk-cell"><span class="risk-badge ${
-        riskStatus.class
-      }">${risk}%</span></span>
-      <span class="patient-date">${added}</span>
-      <span class="details-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
-    </a>
-  `;
-}
-
-/**
- * Get the HTML shell for patient list view
- */
-function getPatientListShell() {
-  const template = document.getElementById("patient-list-template");
-  if (template) {
-    return template.innerHTML;
+function createPatientRow(patient) {
+  // Determine the color class for the risk level
+  let riskClass = "";
+  if (patient.risk_level === "Critical" || patient.risk_level === "Very High") {
+    riskClass = "risk-critical";
+  } else if (patient.risk_level === "High") {
+    riskClass = "risk-high";
+  } else if (patient.risk_level === "Moderate") {
+    riskClass = "risk-moderate";
+  } else {
+    riskClass = "risk-low";
   }
 
-  // Fallback if template not found
-  return `
-    <div class="list-header">
-      <h2>Patient Records Overview</h2>
-      <button class="back-button" onclick="handleViewNavigation(event, 'search')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-    </div>
-    <div class="list-column-headers">
-      <span>ID</span><span>Name</span><span>Age</span><span>Gender</span><span>Risk Level</span><span>Added On</span><span></span>
-    </div>
-    <div id="${listContainerId}">
-      <p style="text-align:center;padding:12px;color:#999;">Loading patients...</p>
-    </div>
-    <div id="list-loading-indicator" style="text-align:center;padding:12px; color:#666; display: none;">Loading more...</div>
-  `;
+  // Use the global handleViewNavigation to go to the details view
+  const row = document.createElement("div");
+  row.className = "patient-row";
+  row.setAttribute("data-patient-id", patient.patient_id);
+  row.innerHTML = `
+        <span>${patient.patient_id}</span>
+        <span class="patient-name">${patient.name}</span>
+        <span>${patient.age}</span>
+        <span>${patient.gender}</span>
+        <span class="${riskClass} risk-level">${patient.risk_level}</span>
+        <span>${patient.added_on}</span>
+        <span class="action-cell">
+            <button class="details-button" onclick="window.handleViewNavigation(event, 'details', '${patient.patient_id}')">
+                Details
+            </button>
+        </span>
+    `;
+  return row;
 }
 
 /**
- * Attach infinite scroll handler to list container
+ * Core function to fetch the next page of patient data.
+ * Now accepts DOM elements as arguments.
  */
-function attachListScrollHandler() {
-  const container = document.getElementById(listContainerId);
-  if (!container) return;
+async function fetchAndRenderPatients(
+  listContainer,
+  initialLoader,
+  loadMoreSpinner,
+  scrollSentinel,
+  emptyMessage
+) {
+  if (!hasMore || isFetching) return;
 
-  function onScroll() {
-    if (!listHasMore || listLoading) return;
-    // when scrolled to near the bottom of the container, load next page
-    if (
-      container.scrollTop + container.clientHeight >=
-      container.scrollHeight - 300
-    ) {
-      // show tiny loader
-      const li = document.getElementById("list-loading-indicator");
-      if (li) li.style.display = "block";
-      loadPatientList(listPage + 1, true).then(() => {
-        const li2 = document.getElementById("list-loading-indicator");
-        if (li2) li2.style.display = "none";
-      });
-    }
-  }
+  isFetching = true;
+  currentPage += 1;
 
-  // make sure we don't attach duplicate listeners
-  container.removeEventListener("scroll", onScroll);
-  container.addEventListener("scroll", onScroll);
-}
+  // Ensure all elements exist before trying to manipulate them
+  const hasLoaders = initialLoader && loadMoreSpinner;
+  const hasContainers = listContainer && emptyMessage;
 
-/**
- * Load patient list from API
- * @param {number} page - Page number to load
- * @param {boolean} append - Whether to append to existing list or replace
- */
-async function loadPatientList(page = 1, append = false) {
-  if (listLoading) return;
-  listLoading = true;
-
-  // Clear previous content if it's a fresh load
-  if (!append) {
-    const container = document.getElementById(listContainerId);
-    if (container)
-      container.innerHTML = `<p style="text-align:center;padding:12px;color:#999;">Loading patients...</p>`;
+  // Show spinner for subsequent loads, hide the initial loader
+  if (currentPage > 1) {
+    if (hasLoaders) loadMoreSpinner.classList.remove("hidden");
+  } else {
+    if (hasLoaders) initialLoader.classList.remove("hidden");
   }
 
   try {
-    const url = `${LIST_URL}?page=${page}&limit=${LIST_LIMIT}`;
-    const data = await fetchJson(url);
-    const items = data.items || [];
-    listHasMore = Boolean(data.has_more);
-    listPage = page;
+    // FIX: Added the 'X-Requested-With: XMLHttpRequest' header to satisfy the Flask server's is_ajax_request() check.
+    const response = await fetch(`/patient/api/data?page=${currentPage}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
 
-    const container = document.getElementById(listContainerId);
+    if (!response.ok) {
+      throw new Error("Failed to fetch patient list data.");
+    }
 
-    if (!append) {
-      // Render fresh list
-      const listHtml = items.map((p) => patientListRowHtml(p)).join("");
+    const data = await response.json();
+    const patients = data.patients || [];
+    hasMore = data.has_next;
 
-      if (container) container.innerHTML = listHtml;
+    // 1. Handle Initial Load UI
+    if (currentPage === 1 && hasContainers) {
+      // Remove initial loader/empty states before injecting content
+      if (initialLoader) initialLoader.remove();
+      if (emptyMessage) emptyMessage.classList.add("hidden");
+    }
 
-      if (items.length === 0 && container) {
-        container.innerHTML = `<p style="text-align:center;padding:20px;color:#999;">No patients found.</p>`;
-      }
-      attachListScrollHandler();
-    } else {
-      // append rows to existing container
-      if (container) {
-        items.forEach((p) => {
-          const div = document.createElement("div");
-          div.innerHTML = patientListRowHtml(p);
-          // append child nodes
-          while (div.firstChild) container.appendChild(div.firstChild);
+    // 2. Render Rows
+    if (listContainer) {
+      if (patients.length > 0) {
+        patients.forEach((patient) => {
+          listContainer.appendChild(createPatientRow(patient));
         });
+      } else if (currentPage === 1) {
+        // Handle truly empty list on first load
+        if (emptyMessage) emptyMessage.classList.remove("hidden");
       }
     }
-  } catch (err) {
-    console.error("Patient list load error", err);
-    if (!append) {
-      const appViewRoot = document.getElementById("appViewRoot");
-      if (appViewRoot) {
-        appViewRoot.innerHTML = `<p style="padding:20px;color:#900">Error loading list.</p>`;
-      }
+  } catch (error) {
+    console.error("List load error:", error);
+    // Show error message on the screen
+    if (listContainer) {
+      listContainer.innerHTML += `<div class="list-placeholder error-message" style="color: #ef4444; padding: 20px;">
+                                         Error: ${error.message}
+                                     </div>`;
     }
+    hasMore = false; // Stop trying to load if there's an error
   } finally {
-    listLoading = false;
+    isFetching = false;
+    // Hide the "Load More" spinner
+    if (loadMoreSpinner) loadMoreSpinner.classList.add("hidden");
+
+    // Disconnect observer if there are no more pages
+    if (!hasMore && observer && scrollSentinel) {
+      observer.unobserve(scrollSentinel);
+      console.log("Observer disconnected: No more patients to load.");
+    }
   }
 }
 
 /**
- * Reset list state (useful when navigating away and back)
+ * Initializes the list view, resets state, and sets up the Intersection Observer.
+ * This is called by app_router.js after the fragment is injected.
  */
-function resetListState() {
-  listPage = 1;
-  listHasMore = false;
-  listLoading = false;
-}
+window.loadPatientListAndAttachScroll = function (
+  startPage = 1,
+  attachScroll = true
+) {
+  // Define DOM references here, AFTER the fragment is loaded into the DOM
+  const listContainer = document.getElementById("patientList");
+  const initialLoader = document.getElementById("listInitialLoader");
+  const loadMoreSpinner = document.getElementById("listLoadMoreSpinner");
+  const scrollSentinel = document.getElementById("scrollSentinel");
+  const emptyMessage = document.getElementById("listEmptyMessage");
 
-// Export functions for use in search_manager.js
-window.PatientList = {
-  getShell: getPatientListShell,
-  load: loadPatientList,
-  reset: resetListState,
+  // Reset state variables
+  currentPage = startPage - 1; // It will be incremented to startPage (1) immediately
+  hasMore = true;
+  isFetching = false;
+
+  // Clear list content before fresh load
+  if (listContainer) listContainer.innerHTML = "";
+
+  // Re-attach initial placeholder elements (if they were removed on a previous view)
+  if (listContainer) {
+    if (initialLoader) listContainer.appendChild(initialLoader);
+    if (emptyMessage) listContainer.appendChild(emptyMessage);
+  }
+
+  // Disconnect old observer if it exists
+  if (observer && scrollSentinel) {
+    observer.unobserve(scrollSentinel);
+    observer = null;
+  }
+
+  // Set up the Intersection Observer for infinite scrolling
+  if (attachScroll && scrollSentinel) {
+    const intersectionCallback = (entries, observer) => {
+      entries.forEach((entry) => {
+        // If the sentinel element is visible and we have more pages to load
+        if (entry.isIntersecting && hasMore && !isFetching) {
+          // Pass the necessary DOM references when calling the fetcher
+          fetchAndRenderPatients(
+            listContainer,
+            initialLoader,
+            loadMoreSpinner,
+            scrollSentinel,
+            emptyMessage
+          );
+        }
+      });
+    };
+
+    observer = new IntersectionObserver(intersectionCallback, {
+      root: document.getElementById("patientListContainer"), // Observe intersection within the scrollable container
+      rootMargin: "0px 0px 50px 0px", // Load content when sentinel is 50px away from the bottom
+      threshold: 0.1,
+    });
+
+    observer.observe(scrollSentinel);
+  }
+
+  // Initial load of the first page
+  // Pass the necessary DOM references for the initial fetch
+  fetchAndRenderPatients(
+    listContainer,
+    initialLoader,
+    loadMoreSpinner,
+    scrollSentinel,
+    emptyMessage
+  );
 };
