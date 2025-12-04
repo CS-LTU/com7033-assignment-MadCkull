@@ -1,0 +1,366 @@
+/* =======================================================
+ * user_manager.css
+ * Styling for the Admin User Management view and modals.
+ * ======================================================= */
+
+.user-manager-container {
+  padding: 32px 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* --- Admin Profile Section --- */
+
+.admin-profile-card {
+  background: #fff;
+  border: 1px solid #e5e5e7;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-header .material-icons {
+  color: #0071e3;
+  font-size: 24px;
+}
+
+.profile-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #1d1d1f;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 32px;
+  margin-bottom: 20px;
+}
+
+.profile-info-grid label {
+  font-size: 12px;
+  color: #86868b;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.profile-info-grid span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* --- User List Section --- */
+
+.user-list-section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #1d1d1f;
+}
+
+.user-list-header {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr;
+  gap: 20px;
+  padding: 10px 15px;
+  background: #f5f5f7;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.user-list-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f9f9fb;
+  background: #fff;
+  transition: background 0.2s;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  margin-bottom: 4px;
+}
+
+.user-list-row:hover {
+  background: #fbfbfd;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #1d1d1f;
+  font-size: 14px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #86868b;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #e9f0ff;
+  color: #004dff;
+  white-space: nowrap;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* --- Base Button Styles (Unified) --- */
+.btn-action {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #0071e3;
+  background: #0071e3;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-action:hover {
+  background: #0063ce;
+  border-color: #0063ce;
+}
+
+.btn-action.btn-danger {
+  background: #d11a1a;
+  border-color: #d11a1a;
+}
+.btn-action.btn-danger:hover {
+  background: #b81414;
+  border-color: #b81414;
+}
+
+.user-actions .btn-action {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f7;
+  color: #444;
+  border-radius: 6px;
+}
+
+.user-actions .btn-action:hover {
+  background: #e5e5e7;
+}
+
+.user-actions .btn-danger {
+  color: #d11a1a;
+}
+.user-actions .btn-danger:hover {
+  background: #ffebeb;
+}
+
+.user-actions .material-icons {
+  font-size: 16px;
+}
+
+/* --- Modal Styles --- */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content h3 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.modal-content p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions.full-width {
+  justify-content: center;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #d1d1d6;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e5e5e7;
+}
+
+/* Password Display Box */
+.password-display-box {
+  display: flex;
+  align-items: center;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 15px;
+}
+
+#newPasswordDisplay {
+  flex-grow: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.btn-copy {
+  background: #0071e3;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-copy:hover {
+  background: #0063ce;
+}
+
+.btn-copy .material-icons {
+  font-size: 16px;
+}
+
+/* Input Group styles (reused from form.css principles) */
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.modern-input,
+.modern-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d1d6;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modern-input:focus,
+.modern-select:focus {
+  border-color: #0071e3;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+.input-help {
+  font-size: 11px;
+  color: #86868b;
+  margin-top: 5px;
+}

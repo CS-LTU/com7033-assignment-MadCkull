@@ -1,0 +1,86 @@
+<!-- 
+  User Manager View Fragment (app/templates/toolbar/user_manager.html)
+  This view is loaded dynamically via app_router.js when navigating to /#/users.
+  It requires user_manager.js for its functionality and user_manager.css for styling.
+-->
+<div class="user-manager-container">
+  <!-- 1. Current Admin Profile (Always at the top for self-management) -->
+  <div id="admin-profile-container">
+    <!-- Admin profile card injected by user_manager.js -->
+  </div>
+
+  <div class="user-list-section">
+    <h2>All Other Users</h2>
+
+    <!-- 2. User List -->
+    <div id="user-list-container">
+      <!-- User list content injected by user_manager.js -->
+    </div>
+  </div>
+
+  <!-- 3. Modals for User Actions (Hidden by default) -->
+
+  <!-- Generic Action Modal for Email/Role Changes -->
+  <div id="actionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modalTitle"></h3>
+      <p id="modalPrompt"></p>
+
+      <form id="actionForm">
+        <div class="input-group">
+          <label id="inputLabel" for="actionValue"></label>
+          <input
+            type="text"
+            id="actionValue"
+            name="actionValue"
+            class="modern-input"
+            required
+          />
+          <p class="input-help" id="inputHelp"></p>
+        </div>
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            onclick="window.userManager.closeModal('actionModal')"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn-submit" id="modalConfirmBtn">
+            Confirm
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div id="passwordModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Password Reset Successful</h3>
+      <p>The new temporary password for the user is:</p>
+      <div class="password-display-box">
+        <span id="newPasswordDisplay"></span>
+        <button
+          type="button"
+          class="btn-copy"
+          onclick="window.userManager.copyPassword()"
+        >
+          <span class="material-icons">content_copy</span> Copy
+        </button>
+      </div>
+      <p class="input-help">
+        The user must change this password upon next login.
+      </p>
+      <div class="modal-actions full-width">
+        <button
+          type="button"
+          class="btn-submit"
+          onclick="window.userManager.closeModal('passwordModal')"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

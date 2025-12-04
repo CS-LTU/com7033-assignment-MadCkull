@@ -1,5 +1,6 @@
 // =======================================================
-// app_router.js (Updated with Settings Route)
+// app_router.js (Updated with Settings and Users Routes)
+// Minimal patch: only patient endpoints adjusted to legacy URLs
 // =======================================================
 
 (function () {
@@ -35,73 +36,85 @@
       </div>`;
 
     // 3. Update Header (Title & Back Button)
-    // Note: Ensure your updateShellHeader function handles 'settings' if it sets titles!
     if (window.updateShellHeader) window.updateShellHeader(viewId);
 
+    // 4. Fetch the content
     try {
-      const response = await fetch(url, {
-        headers: { "X-Requested-With": "XMLHttpRequest" },
+      // NOTE: We fetch the HTML content directly here, NOT JSON.
+      const resp = await fetch(url, {
+        credentials: "same-origin",
+        headers: {
+          // Send a custom header to Flask to request partial templates
+          "X-Requested-With": "XMLHttpRequest",
+        },
       });
 
-      if (!response.ok) throw new Error(`Server status: ${response.status}`);
+      if (!resp.ok) {
+        throw new Error(`Failed to load view: ${resp.status}`);
+      }
 
-      const html = await response.text();
+      // 5. Inject the content
+      const htmlContent = await resp.text();
 
-      // 4. Inject Content
-      contentArea.innerHTML = `<div class="view-scroll-container animate-slide-in-right">${html}</div>`;
+      contentArea.innerHTML = `
+  <div class="view-scroll-container animate-slide-in-right">
+    ${htmlContent}
+  </div>`;
       return true;
-    } catch (err) {
-      console.error("View Load Error:", err);
+    } catch (error) {
+      console.error(`Error loading view fragment for ${viewId}:`, error);
+      const errorMessage =
+        error.message === "Failed to load view: 403"
+          ? "Access Denied. You do not have permission to view this page."
+          : `Could not load view: ${error.message}`;
       contentArea.innerHTML = `
         <div class="view-error-state">
-           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-           <p>Unable to load content.<br><span style="font-size:12px; opacity:0.7">${err.message}</span></p>
-           <button class="details-button" style="margin-top:15px;" onclick="location.reload()">Retry</button>
-        </div>
-      `;
+          <span class="material-icons" style="font-size: 48px; color: #d11a1a; margin-bottom: 10px;">error_outline</span>
+          <h2>Error Loading Page</h2>
+          <p>${errorMessage}</p>
+        </div>`;
       return false;
     }
   }
 
+  /**
+   * Main function to route and render the application view.
+   */
   async function renderView(viewId, patientId = null) {
-    let url;
+    let url = "";
 
-    // --- ROUTE DEFINITIONS ---
-    switch (viewId) {
-      case "list":
-        url = "/patient/views/list";
-        break;
-
-      case "add":
-        // /#/add (New) or /#/add/123 (Edit)
-        if (patientId) {
-          url = `/patient/form/${patientId}`;
-        } else {
-          url = "/patient/form";
-        }
-        break;
-
-      case "details":
-        if (!patientId) return;
-        url = `/patient/views/details/${patientId}`;
-        break;
-
-      // --- NEW SETTINGS ROUTE ---
-      case "settings":
-        url = "/settings/view"; // Matches the route in settings.py
-        break;
-
-      case "search":
+    // Determine the server endpoint based on the viewId
+    if (viewId === "list") {
+      // legacy endpoint for patient list
+      url = "/patient/views/list";
+    } else if (viewId === "add") {
+      // new patient form (legacy endpoint)
+      url = "/patient/form";
+    } else if (viewId === "details" && patientId) {
+      // legacy patient details endpoint
+      url = `/patient/views/details/${patientId}`;
+    } else if (viewId === "edit" && patientId) {
+      // reuse legacy form endpoint for editing
+      url = `/patient/form/${patientId}`;
+    } else if (viewId === "settings") {
+      url = "/settings/view"; // Assumed setting view
+    } else if (viewId === "users") {
+      url = "/admin/users/view"; // New consolidated User Manager View
+    } else if (viewId === "search") {
+      // For search, we hide the shell, so no load is needed.
+      if (previousView && previousView !== "search") {
         toggleViewActive(false);
-        if (window.animateShellClose) await window.animateShellClose();
-        previousView = null;
-        return;
-
-      default:
-        return;
+        if (window.animateShellClose) window.animateShellClose();
+      }
+      previousView = "search";
+      return;
+    } else {
+      console.warn("Unknown view ID:", viewId);
+      viewId = "search";
+      url = null;
     }
 
-    // 1. If we are coming from Search (hidden), activate the UI
+    // If navigating from Search (hidden), activate the UI
     if (
       !document.getElementById("appViewRoot").classList.contains("is-active")
     ) {
@@ -115,9 +128,14 @@
     // 3. Post-load Init
     if (loaded) {
       if (viewId === "list" && window.loadPatientListAndAttachScroll) {
+        // We pass 'false' for attachScroll initially, wait for DOM render
         setTimeout(() => window.loadPatientListAndAttachScroll(1, true), 50);
       }
-      // Note: Settings logic (settings.js) is attached to window, so no specific init needed here.
+
+      // If we are on the users panel, ensure its init script runs
+      if (viewId === "users" && window.userManager) {
+        window.userManager.init();
+      }
     }
 
     previousView = viewId;
@@ -133,7 +151,7 @@
   async function hashChangeHandler() {
     const hash = window.location.hash.substring(1);
     const parts = hash.split("/");
-    const viewId = parts[1]; // e.g. 'settings', 'list', 'add'
+    const viewId = parts[1]; // e.g. 'settings', 'list', 'add', 'users'
     const patientId = parts[2] || null;
 
     if (viewId) {
@@ -145,10 +163,17 @@
 
   window.addEventListener("DOMContentLoaded", () => {
     appViewRoot = document.getElementById("appViewRoot");
-    searchContainer = window.searchContainer;
+    searchContainer = document.getElementById("searchContainer");
+
+    // Initialize the router
     window.addEventListener("hashchange", hashChangeHandler);
 
-    // Trigger initial load based on current hash
-    hashChangeHandler();
+    // Initial load handling
+    if (window.location.hash) {
+      hashChangeHandler();
+    } else {
+      // Default view on first load
+      window.handleViewNavigation(null, "search");
+    }
   });
 })();

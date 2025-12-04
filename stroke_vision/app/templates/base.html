@@ -90,6 +90,12 @@
       href="{{ url_for('static', filename='css/search_manager.css') }}"
     />
 
+    <!-- Move: -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/user_manager.css') }}"
+    />
+
     {% block extra_css %}{% endblock %}
 
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
@@ -128,6 +134,10 @@
     ></script>
     <script
       src="{{ url_for('static', filename='js/settings.js') }}"
+      defer
+    ></script>
+    <script
+      src="{{ url_for('static', filename='js/user_manager.js') }}"
       defer
     ></script>
 

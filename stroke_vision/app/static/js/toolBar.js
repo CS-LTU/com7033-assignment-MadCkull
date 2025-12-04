@@ -10,11 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Data for the menu items
   // You can customize icons here. Lucide icon names required.
   const items = [
-    { title: "Home", icon: "home", action: "/" },
-    { title: "Users", icon: "users", action: "/users" },
-    { title: "Dashboard", icon: "line-chart", action: "/dashboard" }, // 'chart-line' is 'line-chart' in newer lucide
-    { title: "Activity", icon: "activity", action: "/activity" },
-    { title: "Change Log", icon: "scroll-text", action: "/changelog" },
+    { title: "Home", icon: "home", action: "search" }, // Action changed to 'search' viewId
+    { title: "Users", icon: "users", action: "users" },
+    { title: "Dashboard", icon: "line-chart", action: "dashboard" },
+    { title: "Activity", icon: "activity", action: "activity" },
+    { title: "Change Log", icon: "scroll-text", action: "changelog" },
   ];
 
   const dock = document.getElementById("toolbar");
@@ -25,16 +25,19 @@ document.addEventListener("DOMContentLoaded", () => {
   items.forEach((item) => {
     const el = document.createElement("div");
     el.className = "dock-item";
-    // You might want to wrap this in an <a> tag or add onclick handlers based on 'action'
-    el.innerHTML = `
-            <div class="dock-label">${item.title}</div>
-            <i data-lucide="${item.icon}" class="dock-icon"></i>
-        `;
 
-    // Optional: Click handling
-    el.addEventListener("click", () => {
-      console.log(`Navigating to: ${item.action}`);
-      // window.location.href = item.action;
+    // Add data attributes for navigation
+    el.setAttribute("data-view-id", item.action);
+
+    el.innerHTML = `
+      <div class="dock-label">${item.title}</div>
+      <i data-lucide="${item.icon}" class="dock-icon"></i>
+    `;
+
+    // Click handling: Use the global view navigation function
+    el.addEventListener("click", (e) => {
+      // The action attribute now holds the viewId (e.g., 'users', 'search')
+      window.handleViewNavigation(e, item.action);
     });
 
     dock.appendChild(el);

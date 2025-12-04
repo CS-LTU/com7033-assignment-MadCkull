@@ -51,10 +51,6 @@ def create_app():
 
     app.register_blueprint(auth, url_prefix="/auth")
 
-    from app.views.profile import profile
-
-    app.register_blueprint(profile, url_prefix="/profile")
-
     from app.views.process_patient import patient_bp
 
     app.register_blueprint(patient_bp, url_prefix="/patient")
@@ -66,6 +62,10 @@ def create_app():
     from app.views.settings import settings_bp
 
     app.register_blueprint(settings_bp)
+
+    from app.views.user_manager import user_manager_bp
+
+    app.register_blueprint(user_manager_bp)
 
     # Connect to MongoDB
     connect(host=app.config["MONGO_URI"])
