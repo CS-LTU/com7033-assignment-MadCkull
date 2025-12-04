@@ -8,7 +8,7 @@
 .grid-layout-7-col {
   display: grid;
   /* Columns: ID | Name | Age | Gender | Risk | Date | Chevron */
-  grid-template-columns: 80px 2fr 60px 80px 110px 120px 40px;
+  grid-template-columns: 150px 2fr 60px 80px 110px 120px 40px;
   align-items: center;
   padding: 0 24px;
 }

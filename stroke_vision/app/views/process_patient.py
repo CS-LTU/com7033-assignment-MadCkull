@@ -1,5 +1,5 @@
 # views/process_patient.py
-from flask import Blueprint, render_template, url_for, request, jsonify
+from flask import Blueprint, render_template, url_for, request, jsonify, flash, redirect
 from app.forms.patient_form import PatientForm
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 import traceback
 import numpy as np
 import json
+
 
 patient_bp = Blueprint("patient", __name__)
 stroke_predictor = StrokePredictor()
@@ -54,6 +55,16 @@ def map_work_type(work):
     return mapping.get(work, work)
 
 
+def map_residence_type(residence):
+    """Map form residence type to MongoDB expected format."""
+    return "Urban" if residence == "Urban" else "Rural"
+
+
+def map_gender(gender):
+    """Map form gender to MongoDB expected format, handling 'Other'."""
+    return "Other" if gender == "Other" else gender
+
+
 def get_risk_level(risk_percentage):
     """Get risk level based on percentage"""
     if risk_percentage < 20:
@@ -66,6 +77,18 @@ def get_risk_level(risk_percentage):
         return "Very High"
     else:
         return "Critical"
+
+
+# --- Helper to determine CSS class based on risk ---
+def get_risk_class(risk_level):
+    if risk_level in ["Critical", "Very High"]:
+        return "risk-critical"
+    elif risk_level == "High":
+        return "risk-high"
+    elif risk_level == "Moderate":
+        return "risk-moderate"
+    else:
+        return "risk-low"
 
 
 # Custom JSON encoder to handle numpy types
@@ -96,8 +119,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 # =======================================================
-# NEW DATA API ENDPOINT (For client-side data fetching)
-# Route changed from /api/patients/data to /api/data
+# DATA API ENDPOINT (For client-side data fetching)
 # Full URL: /patient/api/data
 # =======================================================
 
@@ -229,51 +251,163 @@ def api_details_patient_view(patient_id):
     )
 
 
-@patient_bp.route("/views/add", methods=["GET"])
+# --------------------Add/Edit Patients route----------------------
+@patient_bp.route("/form", defaults={"patient_id": None}, methods=["GET", "POST"])
+@patient_bp.route("/form/<patient_id>", methods=["GET", "POST"])
 @login_required
-def api_add_patient_view():
-    """Renders the HTML fragment for the Add Patient form."""
-    if not is_ajax_request():
-        return jsonify({"error": "Unauthorized access to API view"}), 403
+def patient_form(patient_id):
+    """
+    Handles both adding a new patient and editing an existing one.
+    - GET request: Renders the form (pre-populated if patient_id is provided).
+    - POST request: Submits data for prediction and potential save.
+    """
+    patient = None
 
-    form = PatientForm()
-    # Use the UNIFIED fragment.
-    # We do NOT pass a 'patient' object here, so the template knows it's 'Add Mode'.
-    return render_template(
-        "patient/patient_form_fragment.html", form=form, patient=None
-    )
+    # --- 3.1 Handle GET Request (Form Rendering/Pre-population) ---
+    if request.method == "GET":
+        # Scenario 1: EDIT Patient (patient_id is provided)
+        if patient_id:
+            try:
+                # Attempt to fetch the existing patient record
+                patient = Patient.objects(patient_id=patient_id).first()
+                if not patient:
+                    # If patient not found, flash error and redirect or return error fragment
+                    flash(f"Patient ID {patient_id} not found.", "warning")
+                    return redirect(url_for("home"))  # Redirect full page
 
+                # Populate the form with patient data for editing
+                # The 'obj' argument automatically sets form field values from the model object
+                form = PatientForm(obj=patient)
 
-@patient_bp.route("/views/edit/<patient_id>", methods=["GET"])
-@login_required
-def api_edit_patient_view(patient_id):
-    """Fetches patient data and renders the HTML fragment for the Edit Patient form."""
-    if not is_ajax_request():
-        return jsonify({"error": "Unauthorized access to API view"}), 403
+                # Check if this is an AJAX request (client-side router)
+                if is_ajax_request():
+                    # For client-side rendering, return the HTML fragment
+                    return render_template(
+                        "patient/patient_form_fragment.html",
+                        form=form,
+                        patient=patient,
+                        mode="edit",
+                    )
+                else:
+                    # For full page load
+                    return render_template(
+                        "patient/edit_patient.html", form=form, patient=patient
+                    )
 
-    patient = Patient.objects(patient_id=patient_id).first()
-    if not patient:
-        return jsonify({"error": "Patient not found"}), 404
+            except Exception as e:
+                print(f"Error fetching patient {patient_id} for edit: {e}")
+                traceback.print_exc()
+                flash("Error loading patient details for editing.", "danger")
+                return redirect(url_for("home"))
 
-    # The form object handles pre-filling data correctly
-    form = PatientForm(obj=patient)
+        # Scenario 2: ADD New Patient (patient_id is None)
+        else:
+            form = PatientForm()
+            # Check if this is an AJAX request (client-side router)
+            if is_ajax_request():
+                # For client-side rendering, return the HTML fragment
+                return render_template(
+                    "patient/patient_form_fragment.html",
+                    form=form,
+                    patient=None,
+                    mode="add",
+                )
+            else:
+                # For full page load
+                return render_template("patient/add_patient.html", form=form)
 
-    # We PASS the 'patient' object here, so the template knows it's 'Edit Mode'.
-    return render_template(
-        "patient/patient_form_fragment.html", form=form, patient=patient
-    )
+    # --- 3.2 Handle POST Request (Form Submission for Prediction/Save) ---
+    elif request.method == "POST":
+        form = PatientForm()
+        if not form.validate_on_submit():
+            # If validation fails, return the form with errors (useful for full page POSTs)
 
+            # Since the front-end handles form submission via JavaScript/API,
+            # we'll assume the form is generally valid, but if not, an API error
+            # response would be better than rendering HTML here.
+            # For simplicity with current setup, we proceed to prediction assuming client validation passed.
+            # If the client side submits via a standard POST without AJAX,
+            # this section would need to return a fully rendered page with errors.
+            pass
 
-# --- Helper to determine CSS class based on risk ---
-def get_risk_class(risk_level):
-    if risk_level in ["Critical", "Very High"]:
-        return "risk-critical"
-    elif risk_level == "High":
-        return "risk-high"
-    elif risk_level == "Moderate":
-        return "risk-moderate"
-    else:
-        return "risk-low"
+        try:
+            # Get the patient_id from the form (it's a hidden field in the edit form)
+            patient_id_from_form = request.form.get("patient_id")
+
+            # 1. Prepare data for prediction
+            data = form.data
+
+            # Remove non-feature fields and map boolean strings
+            input_features = {
+                k: v
+                for k, v in data.items()
+                if k not in ["csrf_token", "submit", "patient_id"]
+            }
+
+            # 2. Get prediction
+            risk_percent, risk_level = stroke_predictor.predict_risk(input_features)
+
+            # 3. Determine if this is ADD or EDIT
+            is_edit = patient_id_from_form is not None and patient_id_from_form != ""
+
+            if is_edit:
+                # EDIT: Fetch existing patient
+                patient = Patient.objects(patient_id=patient_id_from_form).first()
+                if not patient:
+                    return jsonify(
+                        {"success": False, "message": "Patient not found for update"}
+                    ), 404
+            else:
+                # ADD: Create a new Patient object
+                patient = Patient()
+                patient.patient_id = IDGenerator.generate_id()
+                patient.record_entry_date = datetime.now()
+                patient.created_by = (
+                    current_user.username
+                )  # Assuming username is available
+
+            # 4. Update/Set patient object fields
+            patient.name = data["name"]
+            patient.gender = map_gender(data["gender"])
+            patient.age = data["age"]
+            patient.hypertension = int(data["hypertension"])
+            patient.heart_disease = int(data["heart_disease"])
+            patient.ever_married = data["ever_married"]
+            patient.work_type = map_work_type(data["work_type"])
+            patient.residence_type = map_residence_type(data["residence_type"])
+            patient.avg_glucose_level = data["avg_glucose_level"]
+            patient.bmi = data["bmi"]
+            patient.smoking_status = map_smoking_status(data["smoking_status"])
+
+            # Prediction results
+            patient.stroke_risk = risk_percent
+            patient.risk_level = risk_level
+
+            # Save to database
+            patient.save()
+
+            # 5. Return JSON response for client-side redirection/modal
+            action = "updated" if is_edit else "added"
+            return jsonify(
+                {
+                    "success": True,
+                    "message": f"Patient record successfully {action}.",
+                    "patient_id": patient.patient_id,
+                    "risk": risk_percent,
+                    "risk_level": risk_level,
+                    "redirect": url_for("home"),
+                }
+            ), 200
+
+        except Exception as e:
+            print(f"Error processing form submission: {e}")
+            traceback.print_exc()
+            return jsonify(
+                {
+                    "success": False,
+                    "message": f"Server error processing patient data: {str(e)}",
+                }
+            ), 500
 
 
 # =======================================================

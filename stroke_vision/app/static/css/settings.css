@@ -1,85 +1,210 @@
-/* Settings Page Styles */
-.settings-container {
-  max-width: 800px;
+/* settings.css */
+
+.settings-view-container {
+  padding: 32px 40px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  animation: fadeIn 0.4s ease-out;
 }
 
-.settings-header {
+/* --- Hero Section --- */
+.settings-hero {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.user-avatar {
-  width: 80px;
-  height: 80px;
-  background-color: var(--primary);
-  border-radius: 50%;
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatar-gradient.admin-gradient {
+  /* A purpler gradient to distinguish User Settings from Patient Blue */
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-.user-avatar .material-icons {
-  font-size: 48px;
-  color: var(--icon);
+.hero-name {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 4px 0;
 }
 
-.settings-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: 0 4px 6px -1px var(--shadow);
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 500;
 }
 
-.settings-info {
+.role-badge {
+  background: #f5f5f7;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #1d1d1f;
+}
+
+.meta-dot {
+  color: #d2d2d7;
+}
+
+/* --- Layout Grid --- */
+.settings-grid-layout {
   display: grid;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  grid-template-columns: 1fr; /* Stack on mobile, split on desktop */
+  gap: 32px;
 }
 
-.info-group {
+@media (min-width: 768px) {
+  .settings-grid-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* --- Cards --- */
+.setting-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
 }
 
-.info-group label {
-  font-weight: 500;
-  color: var(--text-light);
-  font-size: 0.875rem;
-}
-
-.info-group p {
-  font-size: 1rem;
-  color: var(--text);
-  margin: 0;
-}
-
-.user-role {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--primary);
-  color: var(--text-light);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.settings-actions {
+.card-header {
   display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.settings-form {
-  border-top: 1px solid var(--border);
-  padding-top: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
+.card-icon {
+  color: #5e5ce6; /* Distinct purple-ish accent for settings */
+  font-size: 20px;
 }
 
-.settings-form.hidden {
-  display: none;
+.card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* --- Forms Inside Cards --- */
+.settings-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.modern-input {
+  height: 40px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1d1d1f;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: #5e5ce6;
+  box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.15);
+}
+
+.modern-input.readonly {
+  background-color: #f5f5f7;
+  color: #86868b;
+  cursor: not-allowed;
+  border-color: #e5e5ea;
+}
+
+.helper-text {
+  font-size: 11px;
+  color: #86868b;
+  margin-top: -4px;
+}
+
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* --- Buttons --- */
+.form-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-action.save {
+  background: #0071e3;
+  color: white;
+}
+
+.btn-action.save:hover {
+  background: #0077ed;
+  transform: translateY(-1px);
+}
+
+.btn-action.warning {
+  background: #fff0f0;
+  color: #d11a1a;
+  border: 1px solid #ffe5e5;
+}
+
+.btn-action.warning:hover {
+  background: #ffe5e5;
+  transform: translateY(-1px);
 }

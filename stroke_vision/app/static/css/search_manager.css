@@ -24,7 +24,6 @@
   width: 100%;
   margin: 0 auto;
   position: relative;
-  padding: 20px;
   box-sizing: border-box; /* Ensures padding doesn't overflow width */
 
   display: flex;

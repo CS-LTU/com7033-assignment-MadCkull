@@ -26,7 +26,19 @@
   let sugLoading = false;
 
   // =======================================================
-  // SUGGESTIONS/SEARCH IMPLEMENTATION (Functions are safe to define here)
+  // SHORTCUT HANDLER (THE FIX)
+  // =======================================================
+
+  // This function was missing, causing the console error.
+  // It intercepts the click, prevents default anchor behavior, and calls the router.
+  window.handleShortcutClick = function (event, viewId) {
+    if (window.handleViewNavigation) {
+      window.handleViewNavigation(event, viewId);
+    }
+  };
+
+  // =======================================================
+  // SUGGESTIONS/SEARCH IMPLEMENTATION
   // =======================================================
 
   function createSuggestionElement(item, index) {
@@ -122,12 +134,11 @@
   }, DEBOUNCE_MS);
 
   // =======================================================
-  // DOM READY INITIALIZATION (THE FIX)
+  // DOM READY INITIALIZATION
   // =======================================================
 
   document.addEventListener("DOMContentLoaded", () => {
     // --- UI REFERENCES ---
-    // Note: Now we can safely assume these elements exist.
     searchContainer = document.getElementById("searchContainer");
     spotlightContainer = document.getElementById("spotlightContainer");
     searchInput = document.getElementById("searchInput");
@@ -137,9 +148,9 @@
     // CRITICAL: Check if main elements were found before proceeding
     if (!spotlightContainer || !searchInput || !searchContainer) {
       console.error(
-        "Search Manager failed to initialize: One or more critical UI elements (spotlightContainer, searchInput, etc.) were not found in the DOM."
+        "Search Manager failed to initialize: One or more critical UI elements were not found."
       );
-      return; // Stop execution if elements are missing
+      return;
     }
 
     // 🌟 EXPOSE core elements globally for the router (app_router.js) to manipulate
@@ -167,7 +178,6 @@
         !searchContainer.classList.contains("view-active")
       ) {
         spotlightContainer.classList.remove("hover-active");
-        // Check for global helper before calling
         if (window.changePlaceholder) window.changePlaceholder("Search");
       }
     });
@@ -179,7 +189,6 @@
           !searchContainer.classList.contains("view-active")
         )
           if (window.changePlaceholder)
-            // Check for global helper before calling
             window.changePlaceholder(btn.getAttribute("data-label"));
       });
       btn.addEventListener("mouseleave", () => {
@@ -187,9 +196,7 @@
           searchInput.value.length === 0 &&
           !searchContainer.classList.contains("view-active")
         )
-          if (window.changePlaceholder)
-            // Check for global helper before calling
-            window.changePlaceholder("Search");
+          if (window.changePlaceholder) window.changePlaceholder("Search");
       });
     });
 
@@ -199,7 +206,6 @@
       if (val.length > 0) {
         spotlightContainer.classList.add("typing-active");
         spotlightContainer.classList.remove("hover-active");
-        // Check for global helper before calling
         if (window.changePlaceholder) window.changePlaceholder("");
         onInputDebounced(val);
       } else {
@@ -210,7 +216,6 @@
         ) {
           spotlightContainer.classList.add("hover-active");
         }
-        // Check for global helper before calling
         if (window.changePlaceholder) window.changePlaceholder("Search");
         resultsContainer.innerHTML = "";
       }

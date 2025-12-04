@@ -1,5 +1,5 @@
 // =======================================================
-// app_router.js (Updated for Shell Architecture)
+// app_router.js (Updated with Settings Route)
 // =======================================================
 
 (function () {
@@ -28,13 +28,14 @@
     const contentArea = window.ensureShellStructure();
     if (!contentArea) return false;
 
-    // 2. Show Loader inside the content area (not destroying the whole window)
+    // 2. Show Loader inside the content area
     contentArea.innerHTML = `
       <div class="view-error-state" style="color:#888;">
         <div class="spinner-mac" style="border-top-color:#0071e3;"></div>
       </div>`;
 
     // 3. Update Header (Title & Back Button)
+    // Note: Ensure your updateShellHeader function handles 'settings' if it sets titles!
     if (window.updateShellHeader) window.updateShellHeader(viewId);
 
     try {
@@ -64,22 +65,38 @@
 
   async function renderView(viewId, patientId = null) {
     let url;
+
+    // --- ROUTE DEFINITIONS ---
     switch (viewId) {
       case "list":
         url = "/patient/views/list";
         break;
+
       case "add":
-        url = "/patient/views/add";
+        // /#/add (New) or /#/add/123 (Edit)
+        if (patientId) {
+          url = `/patient/form/${patientId}`;
+        } else {
+          url = "/patient/form";
+        }
         break;
+
       case "details":
         if (!patientId) return;
         url = `/patient/views/details/${patientId}`;
         break;
+
+      // --- NEW SETTINGS ROUTE ---
+      case "settings":
+        url = "/settings/view"; // Matches the route in settings.py
+        break;
+
       case "search":
         toggleViewActive(false);
         if (window.animateShellClose) await window.animateShellClose();
         previousView = null;
         return;
+
       default:
         return;
     }
@@ -98,9 +115,9 @@
     // 3. Post-load Init
     if (loaded) {
       if (viewId === "list" && window.loadPatientListAndAttachScroll) {
-        // We pass 'false' for attachScroll initially, wait for DOM render
         setTimeout(() => window.loadPatientListAndAttachScroll(1, true), 50);
       }
+      // Note: Settings logic (settings.js) is attached to window, so no specific init needed here.
     }
 
     previousView = viewId;
@@ -116,7 +133,7 @@
   async function hashChangeHandler() {
     const hash = window.location.hash.substring(1);
     const parts = hash.split("/");
-    const viewId = parts[1];
+    const viewId = parts[1]; // e.g. 'settings', 'list', 'add'
     const patientId = parts[2] || null;
 
     if (viewId) {
@@ -130,6 +147,8 @@
     appViewRoot = document.getElementById("appViewRoot");
     searchContainer = window.searchContainer;
     window.addEventListener("hashchange", hashChangeHandler);
+
+    // Trigger initial load based on current hash
     hashChangeHandler();
   });
 })();

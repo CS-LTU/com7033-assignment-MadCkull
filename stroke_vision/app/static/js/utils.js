@@ -22,27 +22,36 @@
   /**
    * Helper for fetching JSON from Flask API (Used by search_manager and patient_list)
    */
-  async function fetchJson(url) {
+  async function fetchJson(url, options = {}) {
+    // <--- Add options parameter
     // Retrieve the CSRF token from the meta tag
     const csrfToken = document.querySelector(
       'meta[name="csrf-token"]'
     )?.content;
 
+    // Define default and essential headers
+    const defaultHeaders = {
+      Accept: "application/json",
+      // Include CSRF token for security
+      "X-CSRFToken": csrfToken,
+      // Send a custom header to Flask to request partial templates for form/details
+      "X-Requested-With": "XMLHttpRequest",
+    };
+
+    // Merge provided headers with defaults, prioritizing provided ones
+    options.headers = { ...defaultHeaders, ...options.headers };
+
+    // Set credentials and spread the provided options
     const resp = await fetch(url, {
       credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-        // Include CSRF token for security
-        "X-CSRFToken": csrfToken,
-        // Send a custom header to Flask to request partial templates for form/details
-        "X-Requested-With": "XMLHttpRequest",
-      },
+      ...options, // <--- This now includes the method and body passed from settings.js
     });
 
     if (!resp.ok) {
       if (resp.status === 404) {
         throw new Error("Resource not found.");
       }
+      // Include the status code in the error message for better debugging
       throw new Error(`Fetch ${url} failed: ${resp.status}`);
     }
     return resp.json();

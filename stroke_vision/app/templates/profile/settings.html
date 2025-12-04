@@ -1,120 +1,114 @@
-<!-- profile/settings.html -->
-{% extends "base.html" %} {% block content %}
-<div class="settings-container fade-in">
-  <div class="settings-header">
-    <div class="user-avatar">
-      <span class="material-icons">account_circle</span>
+<div class="settings-view-container">
+  <div class="settings-hero">
+    <div class="hero-left">
+      <div class="hero-avatar">
+        <div class="avatar-gradient admin-gradient">
+          <span class="material-icons">manage_accounts</span>
+        </div>
+      </div>
+      <div class="hero-info">
+        <h1 class="hero-name">{{ current_user.name }}</h1>
+        <div class="hero-meta">
+          <span class="meta-badge role-badge">{{ current_user.role }}</span>
+          <span class="meta-dot">•</span>
+          <span
+            >Member since {{ current_user.created_at.strftime('%b %d, %Y')
+            }}</span
+          >
+        </div>
+      </div>
     </div>
-    <h1>Account Settings</h1>
   </div>
 
-  <div class="settings-card">
-    <div class="settings-info">
-      <div class="info-group">
-        <label>Name</label>
-        <p>{{ current_user.name }}</p>
+  <div class="settings-grid-layout">
+    <div class="setting-card">
+      <div class="card-header">
+        <span class="material-icons card-icon">badge</span>
+        <h3>Profile Information</h3>
       </div>
-      <div class="info-group">
-        <label>Email</label>
-        <p>{{ current_user.email }}</p>
-      </div>
-      <div class="info-group">
-        <label>Role</label>
-        <p class="user-role">{{ current_user.role.title() }}</p>
-      </div>
+
+      <form id="profileForm" onsubmit="window.handleProfileUpdate(event)">
+        <div class="settings-form-content">
+          <div class="input-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              class="modern-input"
+              value="{{ current_user.name }}"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              class="modern-input readonly"
+              value="{{ current_user.email }}"
+              readonly
+            />
+            <small class="helper-text">Email cannot be changed manually.</small>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-action save">
+              <span class="material-icons">save</span> Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <div class="settings-actions">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        onclick="handleFormToggle('nameForm')"
-      >
-        <span class="material-icons">edit</span>
-        Change Name
-      </button>
-      <button
-        type="button"
-        class="btn btn-secondary"
-        onclick="handleFormToggle('passwordForm')"
-      >
-        <span class="material-icons">lock</span>
-        Change Password
-      </button>
+    <div class="setting-card">
+      <div class="card-header">
+        <span class="material-icons card-icon">lock</span>
+        <h3>Security</h3>
+      </div>
+
+      <form id="passwordForm" onsubmit="window.handlePasswordChange(event)">
+        <div class="settings-form-content">
+          <div class="input-group">
+            <label>Current Password</label>
+            <input
+              type="password"
+              name="current_password"
+              class="modern-input"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div class="grid-2-col">
+            <div class="input-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                name="new_password"
+                class="modern-input"
+                placeholder="New password"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Confirm</label>
+              <input
+                type="password"
+                name="confirm_password"
+                class="modern-input"
+                placeholder="Repeat password"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-action warning">
+              <span class="material-icons">key</span> Update Password
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
-
-    <!-- Change Name Form -->
-    <form
-      id="nameForm"
-      class="settings-form hidden"
-      method="POST"
-      action="{{ url_for('profile.update_name') }}"
-    >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-      <div class="form-group">
-        <label for="new_name">New Name</label>
-        <div class="input-icon">
-          <span class="material-icons">person</span>
-          <input type="text" id="new_name" name="new_name" required />
-        </div>
-      </div>
-      <div class="form-actions">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick="handleFormToggle('nameForm')"
-        >
-          Cancel
-        </button>
-        <button type="submit" class="btn btn-primary">Update Name</button>
-      </div>
-    </form>
-
-    <!-- Change Password Form -->
-    <form
-      id="passwordForm"
-      class="settings-form hidden"
-      method="POST"
-      action="{{ url_for('profile.update_password') }}"
-    >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-      <div class="form-group">
-        <label for="current_password">Current Password</label>
-        <div class="input-icon">
-          <span class="material-icons">lock</span>
-          <input
-            type="password"
-            id="current_password"
-            name="current_password"
-            required
-          />
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="new_password">New Password</label>
-        <div class="input-icon">
-          <span class="material-icons">lock_reset</span>
-          <input
-            type="password"
-            id="new_password"
-            name="new_password"
-            required
-          />
-        </div>
-      </div>
-      <div class="form-actions">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick="handleFormToggle('passwordForm')"
-        >
-          Cancel
-        </button>
-        <button type="submit" class="btn btn-primary">Update Password</button>
-      </div>
-    </form>
   </div>
 </div>
-{% endblock %}

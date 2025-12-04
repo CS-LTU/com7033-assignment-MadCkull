@@ -11,12 +11,13 @@
       stroke-linecap="round"
       stroke-linejoin="round"
     >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
-    <span class="tab-label">Notifications</span>
+
+    <span class="tab-label">{{ current_user.name }}</span>
   </button>
-  <button class="tab-btn" aria-label="Home">
+  <!-- <button class="tab-btn" aria-label="Home">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="20"
@@ -32,11 +33,15 @@
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
     <span class="tab-label">Home</span>
-  </button>
+  </button> -->
 
   <div class="separator"></div>
 
-  <button class="tab-btn" aria-label="Settings">
+  <button
+    class="tab-btn"
+    aria-label="Settings"
+    onclick="window.handleViewNavigation(event, 'settings')"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="20"
@@ -56,7 +61,11 @@
     <span class="tab-label">Settings</span>
   </button>
 
-  <button class="tab-btn" aria-label="Logout">
+  <button
+    class="tab-btn"
+    aria-label="Logout"
+    onclick="window.location.href='/auth/logout'"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="20"
@@ -68,7 +77,6 @@
       stroke-linecap="round"
       stroke-linejoin="round"
     >
-      <!-- Logout icon -->
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />

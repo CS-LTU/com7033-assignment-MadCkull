@@ -19,16 +19,26 @@
         <div class="hero-meta">
           <span class="meta-badge">ID: {{ patient.patient_id }}</span>
           <span class="meta-dot">•</span>
-          <span>Joined {{ patient.record_entry_date }}</span>
+          <span>Added: {{ patient.record_entry_date }}</span>
         </div>
       </div>
     </div>
 
     <div class="hero-right">
-      <!-- Uses the 'risk_class' calculated in Python -->
-      <div class="risk-badge-large {{ patient.risk_class }}">
-        <span class="material-icons">health_and_safety</span>
-        {{ patient.risk_level }} Risk ({{ patient.stroke_risk }}%)
+      <div class="details-footer-actions">
+        <button
+          class="btn-action delete"
+          onclick="window.confirmDelete('{{ patient.patient_id }}')"
+        >
+          <span class="material-icons">delete</span>
+        </button>
+
+        <button
+          class="btn-action edit"
+          onclick="window.handleViewNavigation(event, 'add', '{{ patient.patient_id }}')"
+        >
+          <span class="material-icons">edit</span>
+        </button>
       </div>
     </div>
   </div>
@@ -77,6 +87,20 @@
             {{ patient.hypertension }}
           </div>
         </div>
+
+        <!-- Stroke Risk -->
+        <div class="vital-item">
+          <h3>Stroke Risk</h3>
+        </div>
+        <!-- Stroke Risk -->
+        <div class="vital-item">
+          <!-- Uses the 'risk_class' calculated in Python -->
+          <div class="risk-badge-large {{ patient.risk_class }}">
+            <span class="material-icons">health_and_safety</span>
+            {{ patient.risk_level }} Risk ({{ patient.stroke_risk | round(2)
+            }}%)
+          </div>
+        </div>
       </div>
     </div>
 
@@ -114,25 +138,5 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- 4. Footer Actions -->
-  <div class="details-footer-actions">
-    {% if current_user.role == 'admin' %}
-    <button
-      class="btn-action delete"
-      onclick="window.confirmDelete('{{ patient.patient_id }}')"
-    >
-      <span class="material-icons">delete</span> Delete Record
-    </button>
-    {% endif %}
-
-    <!-- Note: Changed 'add' to 'add' (assuming you use same form) or change to 'edit' if you have a specific edit route -->
-    <button
-      class="btn-action edit"
-      onclick="window.handleViewNavigation(event, 'add', '{{ patient.patient_id }}')"
-    >
-      <span class="material-icons">edit</span> Edit Details
-    </button>
   </div>
 </div>
