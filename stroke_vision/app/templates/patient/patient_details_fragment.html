@@ -1,0 +1,138 @@
+<!-- 
+  Patient Details Fragment 
+  IMPORTANT: Do NOT extend 'home.html'. This is injected dynamically.
+-->
+<div class="details-view-container">
+  <!-- 1. Top Identity Section -->
+  <div class="details-hero">
+    <div class="hero-left">
+      <div class="hero-avatar">
+        <div
+          class="avatar-gradient"
+          style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
+        >
+          <span class="material-icons">person</span>
+        </div>
+      </div>
+      <div class="hero-info">
+        <h1 class="hero-name">{{ patient.name }}</h1>
+        <div class="hero-meta">
+          <span class="meta-badge">ID: {{ patient.patient_id }}</span>
+          <span class="meta-dot">•</span>
+          <span>Joined {{ patient.record_entry_date }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <!-- Uses the 'risk_class' calculated in Python -->
+      <div class="risk-badge-large {{ patient.risk_class }}">
+        <span class="material-icons">health_and_safety</span>
+        {{ patient.risk_level }} Risk ({{ patient.stroke_risk }}%)
+      </div>
+    </div>
+  </div>
+
+  <div class="details-grid-layout">
+    <!-- 2. Vitals & Health Card -->
+    <div class="detail-card">
+      <div class="card-header">
+        <span class="material-icons card-icon">monitor_heart</span>
+        <h3>Health Vitals</h3>
+      </div>
+
+      <div class="vitals-grid">
+        <!-- BMI -->
+        <div class="vital-item">
+          <label>BMI</label>
+          <div class="vital-value">{{ "%.1f"|format(patient.bmi) }}</div>
+          <div class="vital-status normal">Body Mass Index</div>
+        </div>
+
+        <!-- Glucose -->
+        <div class="vital-item">
+          <label>Avg Glucose</label>
+          <div class="vital-value">
+            {{ "%.1f"|format(patient.avg_glucose_level) }}
+          </div>
+          <div class="vital-status">mg/dL</div>
+        </div>
+
+        <!-- Heart Status -->
+        <div class="vital-item">
+          <label>Heart Disease</label>
+          <div
+            class="vital-value status-text {% if patient.heart_disease == 'Yes' %}text-danger{% else %}text-success{% endif %}"
+          >
+            {{ patient.heart_disease }}
+          </div>
+        </div>
+
+        <!-- Hypertension -->
+        <div class="vital-item">
+          <label>Hypertension</label>
+          <div
+            class="vital-value status-text {% if patient.hypertension == 'Yes' %}text-danger{% else %}text-success{% endif %}"
+          >
+            {{ patient.hypertension }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Social & Demographics Card -->
+    <div class="detail-card">
+      <div class="card-header">
+        <span class="material-icons card-icon">psychology</span>
+        <h3>Social History</h3>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="info-label">Age</span>
+          <span class="info-val">{{ patient.age }} Years</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Gender</span>
+          <span class="info-val">{{ patient.gender }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Marital Status</span>
+          <span class="info-val">{{ patient.ever_married }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Work Type</span>
+          <span class="info-val">{{ patient.work_type }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Residence</span>
+          <span class="info-val">{{ patient.residence_type }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Smoking Status</span>
+          <span class="info-val">{{ patient.smoking_status }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Footer Actions -->
+  <div class="details-footer-actions">
+    {% if current_user.role == 'admin' %}
+    <button
+      class="btn-action delete"
+      onclick="window.confirmDelete('{{ patient.patient_id }}')"
+    >
+      <span class="material-icons">delete</span> Delete Record
+    </button>
+    {% endif %}
+
+    <!-- Note: Changed 'add' to 'add' (assuming you use same form) or change to 'edit' if you have a specific edit route -->
+    <button
+      class="btn-action edit"
+      onclick="window.handleViewNavigation(event, 'add', '{{ patient.patient_id }}')"
+    >
+      <span class="material-icons">edit</span> Edit Details
+    </button>
+  </div>
+</div>

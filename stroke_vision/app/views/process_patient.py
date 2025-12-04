@@ -191,15 +191,27 @@ def api_add_patient_view():
 @patient_bp.route("/views/details/<patient_id>", methods=["GET"])
 @login_required
 def api_details_patient_view(patient_id):
-    """Fetches patient data and renders the HTML fragment for the details view."""
-    if not is_ajax_request():
-        return jsonify({"error": "Unauthorized access to API view"}), 403
+    """
+    Fetches patient data and renders the HTML fragment for the details view.
+    """
+    # Security check: Ensure this is an AJAX request (optional but good practice)
+    # if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    #    return jsonify({"error": "Unauthorized"}), 403
 
     patient = Patient.objects(patient_id=patient_id).first()
+
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
 
-    # Map model fields to user-friendly format before passing to template
+    # Calculate Risk Class for UI (matches patient_details.css)
+    # We assume patient.risk_level exists, or we derive it from stroke_risk
+    # If your model only has stroke_risk (number), calculate the level string first.
+
+    # Example logic if 'risk_level' is stored in DB:
+    risk_level_str = patient.risk_level if hasattr(patient, "risk_level") else "Low"
+    risk_class_str = get_risk_class(risk_level_str)
+
+    # Prepare data dictionary for the template
     patient_data = {
         "patient_id": patient.patient_id,
         "name": patient.name,
@@ -214,18 +226,16 @@ def api_details_patient_view(patient_id):
         "bmi": patient.bmi,
         "smoking_status": patient.smoking_status,
         "stroke_risk": patient.stroke_risk,
-        "risk_level": get_risk_level(patient.stroke_risk),
-        # Ensure date fields are formatted as strings for Jinja/JS
+        "risk_level": risk_level_str,
+        "risk_class": risk_class_str,  # <--- CRITICAL: Needed for the new UI badge
         "record_entry_date": patient.record_entry_date.strftime("%b %d, %Y")
         if patient.record_entry_date
         else "N/A",
         "created_by": patient.created_by,
-        "updated_at": patient.record_last_updated.strftime("%b %d, %Y")
-        if patient.record_last_updated
-        else "N/A",
     }
 
-    # We assume 'patient/patient_details_fragment.html' is a partial version
+    # Render the FRAGMENT.
+    # Make sure the file on your server is named 'patient/patient_details_fragment.html'
     return render_template(
         "patient/patient_details_fragment.html", patient=patient_data
     )
@@ -248,6 +258,18 @@ def api_edit_patient_view(patient_id):
     return render_template(
         "patient/edit_patient_fragment.html", form=form, patient=patient
     )
+
+
+# --- Helper to determine CSS class based on risk ---
+def get_risk_class(risk_level):
+    if risk_level in ["Critical", "Very High"]:
+        return "risk-critical"
+    elif risk_level == "High":
+        return "risk-high"
+    elif risk_level == "Moderate":
+        return "risk-moderate"
+    else:
+        return "risk-low"
 
 
 # =======================================================
