@@ -25,7 +25,6 @@
 }
 
 .avatar-gradient.admin-gradient {
-  /* A purpler gradient to distinguish User Settings from Patient Blue */
   background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
   width: 64px;
   height: 64px;
@@ -71,7 +70,7 @@
 /* --- Layout Grid --- */
 .settings-grid-layout {
   display: grid;
-  grid-template-columns: 1fr; /* Stack on mobile, split on desktop */
+  grid-template-columns: 1fr; 
   gap: 32px;
 }
 
@@ -100,7 +99,7 @@
 }
 
 .card-icon {
-  color: var(--color-primary); /* Use primary instead of custom purple for consistency */
+  color: var(--color-primary); 
   font-size: 20px;
 }
 
@@ -147,7 +146,7 @@
 
 .modern-input:focus {
   outline: none;
-  border-color: var(--color-primary); /* Use primary */
+  border-color: var(--color-primary); 
   box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.15);
 }
 
@@ -192,7 +191,7 @@
 
 .btn-action.save {
   background: var(--bg-button);
-  color: white;
+  color: var(--text-main);
 }
 
 .btn-action.save:hover {

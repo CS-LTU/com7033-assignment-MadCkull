@@ -1,9 +1,8 @@
 /* logs.css */
-
 .log-view-container {
     display: flex;
     flex-direction: column;
-    height: calc(77.7vh); /* Adjust for toolbar/header */
+    height: calc(77.7vh);
     box-sizing: border-box;
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -12,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md); /* Reduced spacing */
+    margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-sm);
     border-bottom: 1px solid var(--border-light);
 }
@@ -44,9 +43,9 @@
 /* Table Base */
 .log-table {
     width: 100%;
-    border-collapse: separate; /* Changed for border-spacing if needed, but collapse is fine */
+    border-collapse: separate;
     border-collapse: collapse;
-    font-size: 0.85rem; /* Compact font */
+    font-size: 0.85rem; 
 }
 
 /* Header */
@@ -61,12 +60,11 @@
     top: 0;
     z-index: 10;
     border-bottom: 1px solid var(--border-light);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Slight shadow for sticky header */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
 }
 
 /* Row Styling */
 .log-table tr {
-    /* No hover effect requested */
     transition: background-color 0.2s;
 }
 
@@ -136,10 +134,9 @@
     font-style: italic;
 }
 
-/* Column: Message */
+
 .col-message {
-    /* Takes remaining width */
-    flex: 1; /* Added flex: 1 to ensure it takes remaining width as comment suggests */
+    flex: 1; 
 }
 
 .log-message-text {
@@ -150,7 +147,7 @@
 /* Column: Client (OS/IP) */
 .col-client {
     width: 150px;
-    text-align: right; /* Align right as requested/typical for end columns */
+    text-align: right;
 }
 
 .log-client-os {
@@ -197,3 +194,15 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Load More Spinner */
+.log-load-more {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.log-load-more.hidden {
+    display: none;
+}
+

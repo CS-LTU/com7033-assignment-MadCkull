@@ -2,7 +2,8 @@
 from flask import Blueprint, abort, render_template, jsonify
 from flask_login import login_required, current_user
 from app.models.patient import Patient
-from app.utils.log_utils import log_activity, log_security  # added logging imports
+from app.utils.log_utils import log_activity, log_security
+from app.security.auth_shield import AuthShield
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -11,7 +12,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @login_required
 def view_dashboard():
     """Renders the dashboard HTML fragment."""
-    if current_user.role not in ["Admin", "Doctor"]:
+    if current_user.role not in ["Admin", "Doctor", "Nurse"]:
         abort(403)
     return render_template("toolbar/dashboard.html")
 
@@ -24,18 +25,16 @@ def get_dashboard_stats():
     Optimized for MongoDB/MongoEngine.
     """
     try:
-        if current_user.role not in ["Admin", "Doctor"]:
+        if current_user.role not in ["Admin", "Doctor", "Nurse"]:
             return jsonify({"success": False, "message": "Access denied."}), 403
 
         # 1. Fetch all patients (needed for comprehensive stats)
-        # In a very large DB, you would use aggregate pipelines here instead of loading objects.
         patients = Patient.objects()
 
         total_patients = patients.count()
 
         # 2. KPI Calculations
         high_risk_count = patients.filter(stroke_risk__gt=20).count()
-        # hypertensive_count = patients.filter(hypertension="Yes").count()
         smokers_count = patients.filter(
             smoking_status__in=["Smokes", "Formerly Smoked"]
         ).count()
@@ -82,9 +81,14 @@ def get_dashboard_stats():
                 conditions.append("Heart Disease")
             condition_str = ", ".join(conditions) if conditions else "None"
 
+            # Mask name for Admin and Nurse roles for privacy
+            p_name = p.name
+            if current_user.role in ["Admin", "Nurse"]:
+                p_name = AuthShield.mask_name(p_name)
+
             risk_table_data.append(
                 {
-                    "name": p.name,
+                    "name": p_name,
                     "age": p.age,
                     "gender": p.gender,
                     "conditions": condition_str,
@@ -95,11 +99,7 @@ def get_dashboard_stats():
 
         # --- LOGGING: successful dashboard stats generation (patient-related) ---
         # Level 2 = informational (routine)
-        log_activity(
-            f"Requested dashboard stats. total={total_patients}, high_risk={high_risk_count}, "
-            f"avg_glucose={avg_glucose}, smokers={smokers_count}, scatter_points={len(scatter_data)}",
-            level=2,
-        )
+        log_activity(f"Requested dashboard stats.", level=2)
 
         return jsonify(
             {

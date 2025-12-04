@@ -1,8 +1,11 @@
-from flask import Blueprint, jsonify, render_template, abort
+from flask import Blueprint, jsonify, render_template
 from flask_login import login_required, current_user
 from app.models.user import User
 from app.utils.log_utils import log_activity, log_security
 from datetime import datetime, timedelta
+
+# Security
+from app.security.auth_shield import AuthShield
 
 admin_dashboard_bp = Blueprint("admin_dashboard", __name__)
 
@@ -35,20 +38,17 @@ def _process_monthly_growth(users):
 
 @admin_dashboard_bp.route("/admin/dashboard/view", methods=["GET"])
 @login_required
+@AuthShield.require_role(["Admin"])
 def view_dashboard_partial():
-    """Renders the HTML partial for the admin dashboard."""
-    if current_user.role != "Admin":
-         abort(403)
+    """Renders the HTML partial for the admin dashboard (Admin Only)."""
     return render_template("partials/admin_dashboard.html")
 
 
 @admin_dashboard_bp.route("/admin/dashboard/api/stats", methods=["GET"])
 @login_required
+@AuthShield.require_role(["Admin"])
 def get_admin_stats():
-    """Returns analytics data for the admin dashboard."""
-    if current_user.role != "Admin":
-        return jsonify({"success": False, "message": "Access denied"}), 403
-        
+    """Returns analytics data for the admin dashboard (Admin Only)."""
     try:
         users = User.query.all()
         
@@ -60,11 +60,8 @@ def get_admin_stats():
         nurses = sum(1 for u in users if u.role == "Nurse")
         
         # 2. Charts
-        role_data = [admins, doctors, nurses] # Labels: Admin, Doctor, Nurse
+        role_data = [admins, doctors, nurses]
         growth_data = _process_monthly_growth(users)
-        
-        log_activity(f"Admin viewed usage stats. Total users: {total_users}", level=2)
-        
         return jsonify({
             "success": True,
             "kpis": {

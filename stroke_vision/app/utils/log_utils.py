@@ -15,22 +15,40 @@ def _get_client_context():
     client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
     client_ip = client_ip.split(",")[0].strip() if client_ip else "Unknown IP"
 
-    # OS
-    user_agent = request.user_agent
-    client_os = "Unknown OS"
-    if user_agent.platform:
-        os_str = user_agent.platform.capitalize()
-        if os_str in ["Windows", "Mac", "Linux"]:
-            client_os = os_str
-        elif os_str == "Ios":
-            client_os = "iOS"
-        else:
-            client_os = os_str
+    # OS - Parse User-Agent string directly (Werkzeug's platform is often None)
+    user_agent_str = request.headers.get("User-Agent", "")
+    client_os = _parse_os_from_user_agent(user_agent_str)
 
     return {
         "client_ip": client_ip,
         "client_os": client_os,
     }
+
+
+def _parse_os_from_user_agent(ua_string):
+    """Parse OS from User-Agent string."""
+    if not ua_string:
+        return "Unknown"
+    
+    ua = ua_string.lower()
+    
+    # Check common OS patterns
+    if "windows nt 10" in ua or "windows nt 11" in ua:
+        return "Windows"
+    elif "windows" in ua:
+        return "Windows"
+    elif "macintosh" in ua or "mac os x" in ua:
+        return "macOS"
+    elif "iphone" in ua or "ipad" in ua:
+        return "iOS"
+    elif "android" in ua:
+        return "Android"
+    elif "linux" in ua:
+        return "Linux"
+    elif "cros" in ua:
+        return "Chrome OS"
+    else:
+        return "Unknown"
 
 
 def _get_user_details():

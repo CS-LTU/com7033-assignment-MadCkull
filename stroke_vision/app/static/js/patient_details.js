@@ -28,11 +28,11 @@
 
       const result = await response.json();
 
-      if (response.ok) {
-        window.notify.success("Record deleted successfully");
+      if (response.ok && result.success) {
+        window.notify.success(result.message || "Record deleted.");
         window.handleViewNavigation(null, "list");
       } else {
-        throw new Error(result.error || "Failed to delete");
+        throw new Error(result.message || "Failed to delete record.");
       }
     } catch (error) {
       console.error("Delete error:", error);

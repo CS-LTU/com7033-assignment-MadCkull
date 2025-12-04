@@ -40,6 +40,7 @@ def create_app():
     app.config["ACCOUNT_LOCKOUT_ATTEMPTS"] = int(os.getenv("ACCOUNT_LOCKOUT_ATTEMPTS", 5))
     app.config["ACCOUNT_LOCKOUT_PERIOD_SECONDS"] = int(os.getenv("ACCOUNT_LOCKOUT_PERIOD_SECONDS", 900))
     app.config["RATELIMIT_STRATEGY"] = "fixed-window"
+    app.config["RATELIMIT_STORAGE_URI"] = "memory://"
 
     # CSRF specific configurations
     app.config["WTF_CSRF_ENABLED"] = True
@@ -58,6 +59,9 @@ def create_app():
     # Login Manager
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "info"
+
+    # Database (connect before importing blueprints that require indexes)
+    connect(host=app.config["MONGO_URI"])
 
     # Blueprints
     from app.views.auth import auth
@@ -88,8 +92,7 @@ def create_app():
 
     app.register_blueprint(admin_dashboard_bp)
 
-    # Database
-    connect(host=app.config["MONGO_URI"])
+
 
     # Error Handlers
     @app.errorhandler(CSRFError)
@@ -142,6 +145,12 @@ def create_app():
                 httponly=True,
             )
         return response
+
+    # Global Session Validation (AuthShield)
+    from app.security.auth_shield import AuthShield
+    @app.before_request
+    def check_session_security():
+        return AuthShield.validate_session()
 
     @login_manager.user_loader
     def load_user(user_id):

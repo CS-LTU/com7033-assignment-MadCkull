@@ -4,6 +4,9 @@ from app.models.log import ActivityLog, SecurityLog
 
 log_manager_bp = Blueprint("log_manager", __name__, url_prefix="/logs")
 
+# Pagination settings
+LOGS_PER_PAGE = 30
+
 
 @log_manager_bp.route("/view/activity")
 @login_required
@@ -26,16 +29,17 @@ def view_changelog():
 @log_manager_bp.route("/api/activity", methods=["GET"])
 @login_required
 def get_activity_logs():
-    """
-    API to fetch Security Logs (User Logins, etc).
-    Mapped to 'Activity' view in UI.
-    """
+    """API to fetch Security Logs with pagination."""
     try:
         if current_user.role != "Admin":
             return jsonify({"error": "Admin privileges required."}), 403
 
-        # Default sort by timestamp desc, limit 100 for performance
-        logs = SecurityLog.objects.order_by("-timestamp").limit(100)
+        page = request.args.get("page", 1, type=int)
+        skip = (page - 1) * LOGS_PER_PAGE
+
+        # Get total count for has_more calculation
+        total = SecurityLog.objects.count()
+        logs = SecurityLog.objects.order_by("-timestamp").skip(skip).limit(LOGS_PER_PAGE)
 
         data = [
             {
@@ -49,7 +53,14 @@ def get_activity_logs():
             }
             for log in logs
         ]
-        return jsonify(data)
+        
+        has_more = (skip + len(data)) < total
+        
+        return jsonify({
+            "logs": data,
+            "page": page,
+            "has_more": has_more
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -57,16 +68,16 @@ def get_activity_logs():
 @log_manager_bp.route("/api/changelog", methods=["GET"])
 @login_required
 def get_change_logs():
-    """
-    API to fetch Activity Logs (Patient Data Changes).
-    Mapped to 'Change Log' view in UI.
-    """
+    """API to fetch Activity Logs with pagination."""
     try:
         if current_user.role not in ["Admin", "Doctor"]:
             return jsonify({"error": "Access denied."}), 403
 
-        # Default sort by timestamp desc, limit 100
-        logs = ActivityLog.objects.order_by("-timestamp").limit(100)
+        page = request.args.get("page", 1, type=int)
+        skip = (page - 1) * LOGS_PER_PAGE
+
+        total = ActivityLog.objects.count()
+        logs = ActivityLog.objects.order_by("-timestamp").skip(skip).limit(LOGS_PER_PAGE)
 
         data = [
             {
@@ -80,6 +91,13 @@ def get_change_logs():
             }
             for log in logs
         ]
-        return jsonify(data)
+        
+        has_more = (skip + len(data)) < total
+        
+        return jsonify({
+            "logs": data,
+            "page": page,
+            "has_more": has_more
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

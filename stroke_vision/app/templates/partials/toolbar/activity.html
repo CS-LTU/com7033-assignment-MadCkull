@@ -1,6 +1,6 @@
 <div class="log-view-container">
   <!-- Security Logs Table -->
-  <div class="log-table-wrapper">
+  <div class="log-table-wrapper" id="activityScrollContainer">
     <table class="log-table" id="activityLogTable">
       <thead>
         <tr>
@@ -14,6 +14,14 @@
         <!-- JS will inject rows here -->
       </tbody>
     </table>
+
+    <!-- Scroll Sentinel for infinite scroll -->
+    <div id="activityScrollSentinel" style="height: 20px; width: 100%;"></div>
+
+    <!-- Load More Spinner -->
+    <div id="activityLoadMoreSpinner" class="log-load-more hidden">
+      <div class="spinner-mac" style="width: 16px; height: 16px; border-width: 2px;"></div>
+    </div>
 
     <div id="activityLoader" class="log-loader">
       <div class="spinner-mac"></div>

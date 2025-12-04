@@ -27,7 +27,7 @@
       const data = await response.json();
 
       if (response.ok && data.success) {
-        window.notify.success("Record saved successfully!");
+        window.notify.success(data.message || "Record saved successfully!");
 
         if (data.patient_id) {
           window.handleViewNavigation(null, "details", data.patient_id);

@@ -3,20 +3,17 @@ import logging
 
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from flask_login import login_required, current_user
 from mongoengine.errors import DoesNotExist, ValidationError as MongoValidationError
 
-# Adjust import according to your project structure
 from app.models.patient import Patient
 
-# New: logging helper for patient-related actions (visible to doctors & admin)
+# Logging helper for patient-related actions (visible to doctors & admin)
 from app.utils.log_utils import log_activity
 
 logger = logging.getLogger(__name__)
 
 search_bp = Blueprint("search_manager", __name__, url_prefix="/api/patients")
 
-# Recommended defaults (easy to change)
 DEFAULT_LIST_LIMIT = 28
 DEFAULT_SUGGEST_LIMIT = 30
 MAX_LIST_LIMIT = 200
@@ -28,11 +25,11 @@ try:
     # Unique index on patient_id (safe if already exists)
     coll.create_index([("patient_id", 1)], unique=True, background=True)
     # Text index on name for faster prefix/case-insensitive search (text index helps full-text)
-    # We will also use a regex-based prefix search which benefits from a normal index on lowercase name
-    # Create a simple text index (harmless if it already exists)
+    # I will also use a regex-based prefix search which benefits from a normal index on lowercase name
+    # Create a simple text index (it's harmless if it already exists)
     coll.create_index([("name", "text")], background=True)
 except Exception as ex:
-    # Important: can't use log_utils here because there's no Flask request / current_user context at import time.
+    # Important: We can't use log_utils here because there's no Flask request / current_user context at import time.
     logger.warning("Could not ensure indexes on patients collection: %s", ex)
 
 
@@ -65,11 +62,11 @@ def suggestions():
 
     q = (request.args.get("q") or "").strip()
     
-    # RBAC: Nurses can ONLY search by ID (min 9 digits).
+    # RBAC: Nurses can ONLY search by ID (min 7 digits).
     if current_user.role == "Nurse":
-        # If query is not a valid 9-digit ID, return empty immediately.
+        # If query is not a valid 7-digit ID, return empty immediately.
         # This effectively hides all results unless they type a full ID.
-        if not q.isdigit() or len(q) < 9:
+        if not q.isdigit() or len(q) < 7:
              return jsonify({"items": [], "page": 1, "limit": 30, "has_more": False})
 
     page = max(1, int(request.args.get("page") or 1))
@@ -91,7 +88,7 @@ def suggestions():
     try:
         results = []
         if has_digits:
-            # digit-only query: accept exactly 9 digits according to your rule
+            # digit-only query: accept exactly digits according to your rule
             if not _RE_DIGITS.fullmatch(q) or len(q) != 9:
                 # not a valid id; return empty results
                 return jsonify(
@@ -99,17 +96,15 @@ def suggestions():
                 )
             # exact match on patient_id (fast via unique index)
             qs = Patient.objects(patient_id=q).only("patient_id", "name")
-            # If you want prefix matching instead for partial ids, adjust here.
             for p in qs.skip(skip).limit(limit):
                 results.append({"patient_id": p.patient_id, "name": p.name})
             has_more = len(results) == limit
-            # NOTE: per your instruction, do NOT log realtime suggestions (would flood logs)
             return jsonify(
                 {"items": results, "page": page, "limit": limit, "has_more": has_more}
             )
 
         # letters-only -> prefix name search (case-insensitive).
-        # defensive: keep prefix searches short-circuited (prevent overly broad queries)
+        # defensive: keeping prefix searches short-circuited (this prevent overly broad queries)
         sanitized = q.strip()
         if len(sanitized) < 1 or not _RE_ALPHA_SPACE.fullmatch(sanitized):
             return jsonify(
@@ -134,7 +129,6 @@ def suggestions():
             )
 
         has_more = len(results) == limit
-        # NOTE: per your instruction, do NOT log realtime suggestions (would flood logs)
         return jsonify(
             {"items": results, "page": page, "limit": limit, "has_more": has_more}
         )

@@ -36,7 +36,7 @@ def model():
     # Assuming project structure: project_root/tests/conftest.py
     # and project_root/stroke_vision/app/static/models/...
     root_dir = Path(__file__).parent.parent
-    model_path = root_dir / "stroke_vision" / "app" / "static" / "models" / "stroke_vision_model_Final.keras"
+    model_path = root_dir / "stroke_vision" / "app" / "static" / "models" / "stroke_vision_model_Best.keras"
     # Fallback for different structure if needed, but this matches observed structure
     if not model_path.exists():
          # Try without stroke_vision prefix if app is top level? But we saw it is nested.
@@ -188,8 +188,21 @@ def _db(app):
 @pytest.fixture
 def test_user(app, _db):
     """Create a test user."""
-    user = User(name="Test User", email="test@example.com", role="nurse")
-    user.set_password("password123")
-    db.session.add(user)
-    db.session.commit()
-    return user
+    with app.app_context():
+        user = User(name="Test User", email="test@example.com", role="Nurse")
+        user.set_password("TestPass123!")  # Meets complexity: Upper, Lower, Number, Special
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+
+@pytest.fixture
+def doctor_user(app, _db):
+    """Create a test user with Doctor role for protected routes."""
+    with app.app_context():
+        user = User(name="Doctor User", email="doctor@example.com", role="Doctor")
+        user.set_password("DoctorPass123!")
+        db.session.add(user)
+        db.session.commit()
+        return user
+

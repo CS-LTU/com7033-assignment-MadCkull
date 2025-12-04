@@ -4,12 +4,16 @@ from app.forms.patient_form import PatientForm
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
 from app.utils.id_generator import IDGenerator
-from app.utils.log_utils import log_security, log_activity
+from app.utils.log_utils import log_activity
 from datetime import datetime
 from flask_login import current_user, login_required
 import traceback
 import numpy as np
 import json
+
+# Security
+from app.security.auth_shield import AuthShield
+from app.security.input_sanitizer import InputSanitizer, ValidationError
 
 patient_bp = Blueprint("patient", __name__)
 stroke_predictor = StrokePredictor()
@@ -18,15 +22,12 @@ stroke_predictor = StrokePredictor()
 # UTILITIES AND HELPERS
 # =======================================================
 
-
 def is_ajax_request():
     """Checks if the request is an AJAX request."""
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-
 def map_binary_to_yes_no(value):
     return "Yes" if value == "1" else "No"
-
 
 def map_smoking_status(status):
     mapping = {
@@ -36,7 +37,6 @@ def map_smoking_status(status):
         "Unknown": "Unknown",
     }
     return mapping.get(status, status)
-
 
 def map_work_type(work):
     mapping = {
@@ -48,57 +48,28 @@ def map_work_type(work):
     }
     return mapping.get(work, work)
 
-
 def map_residence_type(residence):
     return "Urban" if residence == "Urban" else "Rural"
-
 
 def map_gender(gender):
     return "Other" if gender == "Other" else gender
 
-
 def get_risk_level(risk_percentage):
-    if risk_percentage < 20:
-        return "Low"
-    elif risk_percentage < 40:
-        return "Moderate"
-    elif risk_percentage < 60:
-        return "High"
-    elif risk_percentage < 80:
-        return "Very High"
-    else:
-        return "Critical"
-
+    if risk_percentage < 20: return "Low"
+    elif risk_percentage < 40: return "Moderate"
+    elif risk_percentage < 60: return "High"
+    elif risk_percentage < 80: return "Very High"
+    else: return "Critical"
 
 def get_risk_class(risk_level):
-    if risk_level in ["Critical", "Very High"]:
-        return "risk-critical"
-    elif risk_level == "High":
-        return "risk-high"
-    elif risk_level == "Moderate":
-        return "risk-moderate"
-    else:
-        return "risk-low"
-
+    if risk_level in ["Critical", "Very High"]: return "risk-critical"
+    elif risk_level == "High": return "risk-high"
+    elif risk_level == "Moderate": return "risk-moderate"
+    else: return "risk-low"
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(
-            obj,
-            (
-                np.int_,
-                np.intc,
-                np.intp,
-                np.int8,
-                np.int16,
-                np.int32,
-                np.int64,
-                np.uint8,
-                np.uint16,
-                np.uint32,
-                np.uint64,
-            ),
-        ):
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
             return int(obj)
         elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
             return float(obj)
@@ -106,99 +77,74 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return super().default(obj)
 
-
 # =======================================================
 # DATA API ENDPOINT (For client-side data fetching)
 # =======================================================
 
-
 @patient_bp.route("/api/data", methods=["GET"])
 @login_required
+@AuthShield.require_role(["Doctor"])
 def api_patient_data():
     """Fetches paginated patient data as JSON."""
-    # Security check
     if not is_ajax_request():
-        log_security("Unauthorized API data access attempt.", level=3)
         return jsonify({"error": "Unauthorized access to data API"}), 403
-
-    if current_user.role not in ["Doctor"]:
-        abort(403)
 
     try:
         page = request.args.get("page", 1, type=int)
         limit = 20
         skip = (page - 1) * limit
-
-        patients = (
-            Patient.objects.order_by("-record_entry_date").skip(skip).limit(limit)
-        )
+        patients = Patient.objects.order_by("-record_entry_date").skip(skip).limit(limit)
         total_count = Patient.objects.count()
 
-        log_activity(
-            f"Accessed patient list via API (page={page}, limit={limit}).", level=1
-        )
-
+        log_activity(f"Accessed patient list via API (page={page}, limit={limit}).", level=1)
+        
         import time
-        time.sleep(1.2)  # Artificial delay for loading animation
+        time.sleep(1.2)  # Artificial delay
 
         patient_list = []
         for patient in patients:
-            patient_list.append(
-                {
-                    "id": str(patient.id),
-                    "patient_id": patient.patient_id,
-                    "name": patient.name,
-                    "age": patient.age,
-                    "gender": patient.gender,
-                    "risk_level": get_risk_level(patient.stroke_risk),
-                    "added_on": patient.record_entry_date.strftime("%Y-%m-%d"),
-                    "stroke_risk": patient.stroke_risk,
-                }
-            )
+            patient_list.append({
+                "id": str(patient.id),
+                "patient_id": patient.patient_id,
+                "name": patient.name,
+                "age": patient.age,
+                "gender": patient.gender,
+                "risk_level": get_risk_level(patient.stroke_risk),
+                "added_on": patient.record_entry_date.strftime("%Y-%m-%d"),
+                "stroke_risk": patient.stroke_risk,
+            })
 
-        return jsonify(
-            {
-                "patients": patient_list,
-                "page": page,
-                "limit": limit,
-                "has_next": (page * limit) < total_count,
-                "total_count": total_count,
-            }
-        )
-
+        return jsonify({
+            "patients": patient_list,
+            "page": page,
+            "limit": limit,
+            "has_next": (page * limit) < total_count,
+            "total_count": total_count,
+        })
     except Exception as e:
-        print(f"Error fetching patient data: {str(e)}")
         log_activity(f"Error fetching patient data: {str(e)}", level=3)
-        return jsonify(
-            {"success": False, "message": "Failed to load patient data."}
-        ), 500
-
+        return jsonify({"success": False, "message": "Failed to load patient data."}), 500
 
 # --- View Routes ---
 
-
 @patient_bp.route("/views/list", methods=["GET"])
 @login_required
+@AuthShield.require_role(["Doctor"])
 def api_patient_list_view():
     """Renders the HTML container for the Patient List view."""
-    if current_user.role != "Doctor":
-        abort(403)
-
-    if not is_ajax_request():
-        log_security("Unauthorized access to patient list view endpoint.", level=3)
-        return jsonify({"error": "Unauthorized access to API view"}), 403
-
     return render_template("patient/patient_list_fragment.html")
 
 
 @patient_bp.route("/views/details/<patient_id>", methods=["GET"])
 @login_required
+@AuthShield.require_role(["Doctor", "Nurse"])
 def api_details_patient_view(patient_id):
-    """
-    Fetches patient data and renders the HTML fragment for the details view.
-    """
-    if current_user.role == "Admin":
-        abort(403)
+    """Fetches patient data and renders the HTML fragment for the details view."""
+    # Validate patient ID format
+    try:
+        InputSanitizer.validate_patient_id(patient_id)
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 400
 
     patient = Patient.objects(patient_id=patient_id).first()
 
@@ -227,75 +173,45 @@ def api_details_patient_view(patient_id):
         "stroke_risk": patient.stroke_risk,
         "risk_level": risk_level_str,
         "risk_class": risk_class_str,
-        "record_entry_date": patient.record_entry_date.strftime("%b %d, %Y")
-        if patient.record_entry_date
-        else "N/A",
+        "record_entry_date": patient.record_entry_date.strftime("%b %d, %Y") if patient.record_entry_date else "N/A",
         "created_by": patient.created_by,
     }
 
-    return render_template(
-        "patient/patient_details_fragment.html", patient=patient_data
-    )
+    return render_template("patient/patient_details_fragment.html", patient=patient_data)
 
 
 # --------------------Add/Edit Patients route----------------------
 @patient_bp.route("/form", defaults={"patient_id": None}, methods=["GET", "POST"])
 @patient_bp.route("/form/<patient_id>", methods=["GET", "POST"])
 @login_required
+@AuthShield.require_role(["Doctor", "Nurse"])
+@AuthShield.secure_transaction # Catches unexpected errors
 def patient_form(patient_id):
     """Handles both adding a new patient and editing an existing one."""
-    if current_user.role == "Admin":
-        log_security(f"Unauthorized attempt to access patient form.", level=2)
-        abort(403)
-    
     patient = None
 
     # Handle GET Request
     if request.method == "GET":
-        # Edit Patient
         if patient_id:
             try:
                 patient = Patient.objects(patient_id=patient_id).first()
                 if not patient:
                     flash(f"Patient ID {patient_id} not found.", "warning")
-                    log_security(
-                        f"Attempted to edit non-existent patient: {patient_id}", level=2
-                    )
                     return redirect(url_for("home"))
 
                 form = PatientForm(obj=patient)
-
                 if is_ajax_request():
-                    return render_template(
-                        "patient/patient_form_fragment.html",
-                        form=form,
-                        patient=patient,
-                        mode="edit",
-                    )
+                    return render_template("patient/patient_form_fragment.html", form=form, patient=patient, mode="edit")
                 else:
-                    return render_template(
-                        "patient/edit_patient.html", form=form, patient=patient
-                    )
-
+                    return render_template("patient/edit_patient.html", form=form, patient=patient)
             except Exception as e:
-                print(f"Error fetching patient {patient_id} for edit: {e}")
-                traceback.print_exc()
-                log_activity(
-                    f"Error loading patient {patient_id} for edit: {str(e)}", level=3
-                )
+                log_activity(f"Error loading patient {patient_id} for edit: {str(e)}", level=3)
                 flash("Error loading patient details for editing.", "danger")
                 return redirect(url_for("home"))
-
-        # Add Patient
         else:
             form = PatientForm()
             if is_ajax_request():
-                return render_template(
-                    "patient/patient_form_fragment.html",
-                    form=form,
-                    patient=None,
-                    mode="add",
-                )
+                return render_template("patient/patient_form_fragment.html", form=form, patient=None, mode="add")
             else:
                 return render_template("patient/add_patient.html", form=form)
 
@@ -303,289 +219,184 @@ def patient_form(patient_id):
     elif request.method == "POST":
         form = PatientForm()
         if not form.validate_on_submit():
-            pass
+            # Return first validation error
+            for field, errors in form.errors.items():
+                return jsonify({"success": False, "message": errors[0]}), 400
 
+        # Validate patient data with strict rules before processing
         try:
-            patient_id_from_form = request.form.get("patient_id")
+            InputSanitizer.validate_patient_data(form.data)
+        except ValidationError as e:
+            return jsonify({"success": False, "message": str(e)}), 400
 
-            data = form.data
+        # Sanitize text fields (I'll use this later in case I need it, currently sanitization is already being done by the form)
+        clean_data = InputSanitizer.clean_form_data(form.data)
 
-            input_features = {
-                k: v
-                for k, v in data.items()
-                if k not in ["csrf_token", "submit", "patient_id"]
-            }
+        patient_id_from_form = request.form.get("patient_id")
+        is_edit = bool(patient_id_from_form)
 
-            risk_percent, risk_level = stroke_predictor.predict_risk(input_features)
+        # Prepare features for prediction (using clean string values or form values)
+        input_features = {
+            k: v for k, v in form.data.items() if k not in ["csrf_token", "submit", "patient_id"]
+        }
+        
+        # Recalculate risk
+        risk_percent, risk_level = stroke_predictor.predict_risk(input_features)
 
-            is_edit = patient_id_from_form is not None and patient_id_from_form != ""
+        if is_edit:
+            patient = Patient.objects(patient_id=patient_id_from_form).first()
+            if not patient:
+                return jsonify({"success": False, "message": "Patient not found for update"}), 404
+        else:
+            patient = Patient()
+            patient.patient_id = IDGenerator.generate_id()
+            patient.record_entry_date = datetime.now()
+            patient.created_by = current_user.name
 
-            if is_edit:
-                patient = Patient.objects(patient_id=patient_id_from_form).first()
-                if not patient:
-                    log_activity(
-                        f"Patient update attempted but not found: {patient_id_from_form}",
-                        level=2,
-                    )
-                    return jsonify(
-                        {"success": False, "message": "Patient not found for update"}
-                    ), 404
-            else:
-                patient = Patient()
-                patient.patient_id = IDGenerator.generate_id()
-                patient.record_entry_date = datetime.now()
-                patient.created_by = (
-                    current_user.name
-                )
+        # Mapping and Setting
+        patient.name = InputSanitizer.sanitize_text(form.name.data) # Sanitize Name strictly
+        patient.gender = map_gender(form.gender.data)
+        patient.age = form.age.data
+        patient.hypertension = int(form.hypertension.data)
+        patient.heart_disease = int(form.heart_disease.data)
+        patient.ever_married = form.ever_married.data
+        patient.work_type = map_work_type(form.work_type.data)
+        patient.residence_type = map_residence_type(form.residence_type.data)
+        patient.avg_glucose_level = form.avg_glucose_level.data
+        patient.bmi = form.bmi.data
+        patient.smoking_status = map_smoking_status(form.smoking_status.data)
+        
+        patient.stroke_risk = risk_percent
+        patient.risk_level = risk_level
 
-            patient.name = data["name"]
-            patient.gender = map_gender(data["gender"])
-            patient.age = data["age"]
-            patient.hypertension = int(data["hypertension"])
-            patient.heart_disease = int(data["heart_disease"])
-            patient.ever_married = data["ever_married"]
-            patient.work_type = map_work_type(data["work_type"])
-            patient.residence_type = map_residence_type(data["residence_type"])
-            patient.avg_glucose_level = data["avg_glucose_level"]
-            patient.bmi = data["bmi"]
-            patient.smoking_status = map_smoking_status(data["smoking_status"])
+        patient.save()
 
-            patient.stroke_risk = risk_percent
-            patient.risk_level = risk_level
+        action_log = f"Updated patient {patient.patient_id}" if is_edit else f"Added patient {patient.patient_id}"
+        log_activity(f"{action_log} (Risk: {risk_level})", level=1)
 
-            patient.save()
-
-            if is_edit:
-                log_activity(
-                    f"Updated patient {patient.patient_id} (Risk: {risk_level})",
-                    level=1,
-                )
-            else:
-                log_activity(
-                    f"Added paetient {patient.patient_id} (Risk: {risk_level})",
-                    level=1,
-                )
-
-            action = "updated" if is_edit else "added"
-            return jsonify(
-                {
-                    "success": True,
-                    "message": f"Patient record {action}.",
-                    "patient_id": patient.patient_id,
-                    "risk": risk_percent,
-                    "risk_level": risk_level,
-                    "redirect": url_for("home"),
-                }
-            ), 200
-
-        except Exception as e:
-            print(f"Error processing form submission: {e}")
-            traceback.print_exc()
-            log_activity(f"Error processing form submission: {str(e)}", level=4)
-            return jsonify(
-                {
-                    "success": False,
-                    "message": "Server error processing patient data.",
-                }
-            ), 500
-
-
-# --- Legacy Routes ---
+        return jsonify({
+            "success": True, 
+            "message": f"Patient record {'updated' if is_edit else 'added'}.",
+            "patient_id": patient.patient_id,
+            "risk": risk_percent,
+            "risk_level": risk_level,
+            "redirect": url_for("home")
+        })
 
 
 @patient_bp.route("/predict", methods=["POST"])
 @login_required
+@AuthShield.require_role(["Doctor", "Nurse"])
+@AuthShield.secure_transaction
 def predict_risk():
-    if current_user.role == "Admin":
-        return jsonify({"success": False, "message": "Admins cannot perform predictions."}), 403
+    """Predicts risk and optionally saves/updates patient."""
+    # Sanitize form data (skips password fields automatically)
+    raw_data = InputSanitizer.clean_form_data(request.form)
+    
+    # Validate all patient data with strict rules
     try:
-        form_age = request.form.get("age")
-        form_gender = request.form.get("gender")
-        form_hypertension = request.form.get("hypertension")
-        form_heart_disease = request.form.get("heart_disease")
-        form_ever_married = request.form.get("ever_married")
-        form_work_type = request.form.get("work_type")
-        form_residence_type = request.form.get("residence_type")
-        form_avg_glucose_level = request.form.get("avg_glucose_level")
-        form_bmi = request.form.get("bmi")
-        form_smoking_status = request.form.get("smoking_status")
-
+        InputSanitizer.validate_patient_data(raw_data)
+    except ValidationError as e:
+        log_activity(f"Validation failed: {str(e)}", level=2)
+        return jsonify({"success": False, "message": str(e)}), 400
+    
+    # Extract prediction fields
+    try:
         prediction_data = {
-            "age": form_age,
-            "gender": form_gender,
-            "hypertension": form_hypertension,
-            "heart_disease": form_heart_disease,
-            "ever_married": form_ever_married,
-            "work_type": form_work_type,
-            "residence_type": form_residence_type,
-            "avg_glucose_level": form_avg_glucose_level,
-            "bmi": form_bmi,
-            "smoking_status": form_smoking_status,
+            "age": raw_data.get("age"),
+            "gender": raw_data.get("gender"),
+            "hypertension": raw_data.get("hypertension"),
+            "heart_disease": raw_data.get("heart_disease"),
+            "ever_married": raw_data.get("ever_married"),
+            "work_type": raw_data.get("work_type"),
+            "residence_type": raw_data.get("residence_type"),
+            "avg_glucose_level": raw_data.get("avg_glucose_level"),
+            "bmi": raw_data.get("bmi"),
+            "smoking_status": raw_data.get("smoking_status"),
         }
+        
+        risk_percentage = float(stroke_predictor.predict_risk(prediction_data))
+        risk_level = get_risk_level(risk_percentage)
+        
+        log_activity(f"Prediction computed: risk={risk_percentage}", level=1)
+        
+    except ValueError as e:
+        log_activity(f"Prediction failed due to bad input: {str(e)}", level=2)
+        return jsonify({"success": False, "message": str(e)}), 400
 
-        try:
-            risk_percentage = float(stroke_predictor.predict_risk(prediction_data))
-            risk_level = get_risk_level(risk_percentage)
-            log_activity(
-                f"Prediction computed (inline API): risk={risk_percentage}, level={risk_level}",
-                level=1,
-            )
-        except ValueError as e:
-            log_activity(f"Prediction failed due to bad input: {str(e)}", level=2)
-            return jsonify({"success": False, "message": str(e)}), 400
+    # Save logic if applicable
+    patient_id = raw_data.get("patient_id")
+    
+    # Determine Patient Object
+    patient = None
+    if patient_id:
+        patient = Patient.objects(patient_id=patient_id).first()
+    
+    # If creating new
+    if not patient:
+        patient = Patient()
+        patient.patient_id = IDGenerator.generate_patient_id()
+        patient.record_entry_date = datetime.now()
+        patient.created_by = current_user.name
+        is_new = True
+    else:
+        is_new = False
+    
+    patient.name = raw_data.get("name", patient.name)
+    if raw_data.get("age"): patient.age = int(raw_data.get("age"))
+    patient.gender = raw_data.get("gender") or patient.gender
+    patient.ever_married = raw_data.get("ever_married") or patient.ever_married
+    patient.work_type = map_work_type(raw_data.get("work_type")) or patient.work_type
+    patient.residence_type = raw_data.get("residence_type") or patient.residence_type
+    patient.heart_disease = map_binary_to_yes_no(raw_data.get("heart_disease"))
+    patient.hypertension = map_binary_to_yes_no(raw_data.get("hypertension"))
+    
+    if raw_data.get("avg_glucose_level"): patient.avg_glucose_level = float(raw_data.get("avg_glucose_level"))
+    if raw_data.get("bmi"): patient.bmi = float(raw_data.get("bmi"))
+    patient.smoking_status = map_smoking_status(raw_data.get("smoking_status")) or patient.smoking_status
+    
+    patient.stroke_risk = risk_percentage
+    patient.risk_level = risk_level
+    
+    try:
+        if not is_new:
+            patient.updated_by = current_user.name
+            patient.updated_at = datetime.now()
+    except: pass
 
-        patient_id = request.form.get("patient_id")
+    patient.save()
 
-        try:
-            if patient_id:
-                patient = Patient.objects(patient_id=patient_id).first()
-                if not patient:
-                    patient = None
-            else:
-                patient = None
+    log_activity(f"{'Created' if is_new else 'Updated'} patient {patient.patient_id} via Predict API", level=1)
 
-            if patient:
-                patient.name = request.form.get("name", patient.name)
-                patient.age = (
-                    int(form_age) if form_age not in (None, "") else patient.age
-                )
-                patient.gender = form_gender or patient.gender
-                patient.ever_married = form_ever_married or patient.ever_married
-                patient.work_type = map_work_type(form_work_type) or patient.work_type
-                patient.residence_type = form_residence_type or patient.residence_type
-                patient.heart_disease = map_binary_to_yes_no(form_heart_disease)
-                patient.hypertension = map_binary_to_yes_no(form_hypertension)
-                patient.avg_glucose_level = (
-                    float(form_avg_glucose_level)
-                    if form_avg_glucose_level not in (None, "")
-                    else patient.avg_glucose_level
-                )
-                patient.bmi = (
-                    float(form_bmi) if form_bmi not in (None, "") else patient.bmi
-                )
-                patient.smoking_status = (
-                    map_smoking_status(form_smoking_status) or patient.smoking_status
-                )
-
-                patient.stroke_risk = risk_percentage
-                # optional — set/update audit fields if you have them
-                try:
-                    patient.updated_by = current_user.name
-                    patient.record_last_updated = datetime.now()
-                except Exception:
-                    pass
-
-                patient.save()
-                response_patient = patient
-
-                log_activity(
-                    f"Updated patient {response_patient.patient_id} (Risk: {risk_level})",
-                    level=1,
-                )
-            else:
-                new_patient = Patient(
-                    patient_id=IDGenerator.generate_patient_id(),
-                    name=request.form.get("name"),
-                    age=int(form_age) if form_age not in (None, "") else None,
-                    gender=form_gender,
-                    ever_married=form_ever_married,
-                    work_type=map_work_type(form_work_type),
-                    residence_type=form_residence_type,
-                    heart_disease=map_binary_to_yes_no(form_heart_disease),
-                    hypertension=map_binary_to_yes_no(form_hypertension),
-                    avg_glucose_level=float(form_avg_glucose_level)
-                    if form_avg_glucose_level not in (None, "")
-                    else None,
-                    bmi=float(form_bmi) if form_bmi not in (None, "") else None,
-                    smoking_status=map_smoking_status(form_smoking_status),
-                    stroke_risk=risk_percentage,
-                    record_entry_date=datetime.now(),
-                    created_by=current_user.name,
-                )
-                new_patient.save()
-                response_patient = new_patient
-
-                log_activity(
-                    f"Created patient {response_patient.patient_id} (Risk: {risk_level})",
-                    level=1,
-                )
-
-            response = {
-                "success": True,
-                "patient_id": response_patient.patient_id,
-                "name": response_patient.name,
-                "risk": risk_percentage,
-                "risk_level": risk_level,
-                "message": "Patient data saved.",
-            }
-
-            return (
-                json.dumps(response, cls=NumpyEncoder),
-                200,
-                {"Content-Type": "application/json"},
-            )
-
-        except Exception as e:
-            print(f"Error saving/updating patient: {str(e)}")
-            print(traceback.format_exc())
-            log_activity(f"Error saving/updating patient: {str(e)}", level=4)
-            return jsonify(
-                {
-                    "success": False,
-                    "message": "Error saving patient data.",
-                }
-            ), 500
-
-    except Exception as e:
-        print(f"Unexpected error in predict_risk: {str(e)}")
-        print(traceback.format_exc())
-        log_activity(f"Unexpected error in predict_risk: {str(e)}", level=4)
-        return jsonify(
-            {"success": False, "message": "An unexpected server error occurred."}
-        ), 500
+    return json.dumps({
+        "success": True,
+        "patient_id": patient.patient_id,
+        "name": patient.name,
+        "risk": risk_percentage,
+        "risk_level": risk_level,
+        "message": "Patient data saved."
+    }, cls=NumpyEncoder), 200, {"Content-Type": "application/json"}
 
 
 @patient_bp.route("/api/delete/<patient_id>", methods=["DELETE"])
 @login_required
+@AuthShield.require_role(["Doctor"])
+@AuthShield.secure_transaction
 def delete_patient(patient_id):
+    # Validate patient ID format before DB query
     try:
-        if current_user.role != "Doctor":
-            log_security(
-                f"Unauthorized delete attempt for patient {patient_id} by user {current_user.name}",
-                level=3,
-            )
-            return jsonify(
-                {
-                    "success": False,
-                    "message": "Only Doctors can delete patients.",
-                }
-            ), 403
+        InputSanitizer.validate_patient_id(patient_id)
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+    
+    patient = Patient.objects(patient_id=patient_id).first()
+    if not patient:
+        return jsonify({"success": False, "message": "Patient not found"}), 404
 
-        patient = Patient.objects(patient_id=patient_id).first()
-        if not patient:
-            log_activity(
-                f"Delete attempted for non-existent patient: {patient_id}", level=2
-            )
-            return jsonify({"success": False, "message": "Patient not found"}), 404
+    patient.delete()
+    log_activity(f"Deleted patient record: {patient_id}", level=1)
 
-        patient.delete()
-
-        log_security(f"Deleted patient record: {patient_id}", level=1)
-
-        return jsonify(
-            {
-                 "success": True,
-                 "message": "Patient record deleted.",
-                 "redirect": url_for("home"),
-            }
-        ), 200
-
-    except Exception as e:
-        print(f"Error deleting patient: {str(e)}")
-        log_security(f"Error deleting patient {patient_id}: {str(e)}", level=4)
-        return jsonify(
-            {"success": False, "message": "Error deleting patient."}
-        ), 500
+    return jsonify({"success": True, "message": "Patient record deleted.", "redirect": url_for("home")})
 
 
 @patient_bp.route("/count", methods=["GET"])
@@ -593,9 +404,7 @@ def delete_patient(patient_id):
 def patients_count():
     try:
         count = Patient.objects.count()
-        log_activity(f"Accessed patient count endpoint (count={count})", level=1)
         return jsonify({"count": count})
     except Exception as error:
-        print("Error counting patients:", str(error))
         log_activity(f"Error counting patients: {str(error)}", level=3)
         return jsonify({"error": "Failed to count patients"}), 500

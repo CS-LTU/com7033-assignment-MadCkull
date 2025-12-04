@@ -27,10 +27,10 @@
       });
 
       if (result.success) {
-        window.notify.success("Profile updated successfully!");
+        window.notify.success(result.message || "Profile updated!");
         document.querySelector(".hero-name").textContent = data.name;
       } else {
-        window.notify.error(result.message);
+        window.notify.error(result.message || "Failed to update profile.");
       }
     } catch (error) {
 
@@ -71,15 +71,15 @@
       });
 
       if (result.success) {
-        window.notify.success("Password changed successfully.");
+        window.notify.success(result.message || "Password changed.");
         form.reset();
       } else {
-        window.notify.error("Failed, Please Check your details.");
+        window.notify.error(result.message || "Failed to change password.");
       }
     } catch (error) {
 
       console.error("Password change failed:", error);
-      window.notify.error("Failed, Please Check your details.");
+      window.notify.error("Something went wrong. Please try again.");
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;

@@ -29,8 +29,6 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models.user import User
 from app import db, limiter
-
-# NOTE: Ensure this path is correct based on your structure
 from app.utils.log_utils import log_security
 import logging
 import os
@@ -48,7 +46,7 @@ MSG = {
     "INFO": "info",
 }
 
-# Small local list of common weak passwords. Expand this if you like.
+# Small local list of common weak passwords.
 COMMON_PASSWORDS = {
     "password",
     "123456",
@@ -90,7 +88,7 @@ def clean_form_str_fields(form):
 def password_complexity(form, field):
     """WTForms custom validator enforcing password rules."""
     pw = field.data or ""
-    # Basic length guard (already also enforced by Length) but double-check
+    # Basic length guard (it's already also enforced by Length)
     if len(pw) < 8:
         raise ValidationError("Password must be at least 8 characters long.")
 
@@ -122,7 +120,7 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    # Accept letters, spaces, hyphens, apostrophes, up to 5 name parts (realistic)
+    # Accept letters, spaces, hyphens, apostrophes, up to 5 name parts
     name = StringField(
         "Name",
         validators=[
@@ -146,7 +144,7 @@ class RegistrationForm(FlaskForm):
         choices=[("Doctor", "Doctor"), ("Nurse", "Nurse"), ("Admin", "Admin")],
         validators=[DataRequired(message="Role is required")],
     )
-    # Optional admin invite code (recommended to be set as APP config ADMIN_INVITE_CODE)
+    # Optional admin invite code (Set in APP config (.env file) ADMIN_INVITE_CODE)
     admin_code = StringField("Invite Code", validators=[Optional()])
 
 
@@ -166,7 +164,7 @@ def register():
         name = _clean_string(form.name.data)
         email = _clean_string(form.email.data)
         if email:
-            email = email.lower()  # ensure uniqueness check is case-insensitive
+            email = email.lower()  # This ensures uniqueness check is case-insensitive
 
         # Backend enforcement: Admin creation requires invite code or no existing admin
         if form.role.data == "Admin":

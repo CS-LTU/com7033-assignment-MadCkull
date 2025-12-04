@@ -165,7 +165,7 @@ graph LR
       <li><code style="font-weight: 900">static/</code>: Houses the entire Single Page Application (SPA) frontend styling & logic, including JavaScript modules, CSS, client-side routing and pre-trained ML Model.</li>
       <li><code style="font-weight: 900">views/</code>: Contains the Flask backend application, defining RESTful API endpoints, logic, authentication handlers, and database interfaces.</li>
     <li><code style="font-weight: 900">models/</code>: Defines database schemas for MongoDB (patient records and application logs) and SQLite (user authentication and management).</li>
-    <li><code style="font-weight: 900">tests/</code>: Contains unit test files utilizing pytest for ensuring code quality and functionality.</li>
+    <li><code style="font-weight: 900">unit_tests/</code>: Contains unit test files utilizing pytest for ensuring code quality and functionality.</li>
     <li><code style="font-weight: 900">docs/</code>: Houses project documentation, architectural diagrams, and other valuable resources.</li>
     <li><code style="font-weight: 900">utils/</code>: A collection of shared utility functions and helper scripts used throughout the application.</li>
     <li><code style="font-weight: 900">.env</code>: Manages environment variables for secure configuration, including API keys and sensitive data.</li>
@@ -254,10 +254,12 @@ Experience the power of StrokeVision in seconds.
 
 ### Running Tests:
 
+- **Project Includes +61 Comprehensive Unit Tests**
+
 - Just run following command:
 
 ```bash
-python -m pytest tests/ -v
+python -m pytest unit_tests/ -v
 ```
 
 ---
