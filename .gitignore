@@ -1,5 +1,8 @@
 #GitHub's Python Template:
 
+# Temporary
+Documentation/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
