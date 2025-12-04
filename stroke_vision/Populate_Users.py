@@ -37,11 +37,32 @@ def generate_strong_password(length=12):
 def populate_users():
     app = create_app()
     with app.app_context():
+        print("--- Initializing Database ---")
+        db.create_all()
         print("--- Starting User Population (last 6 months distribution) ---")
         
         # Determine number of users to generate (5 to 7)
         num_users = random.randint(5, 7)
         users_created = []
+
+        # Ensure at least one Admin exists
+        if not User.query.filter_by(email_hash=User.hash_email("admin@strokevision.com")).first():
+            admin = User(
+                name="System Admin",
+                email="admin@strokevision.com",
+                email_hash=User.hash_email("admin@strokevision.com"),
+                role="Admin"
+            )
+            admin.set_password("Admin123!")
+            db.session.add(admin)
+            db.session.commit()
+            users_created.append({
+                "Name": admin.name,
+                "Email": admin.email,
+                "Role": admin.role,
+                "Password": "Admin123!",
+                "Date": datetime.utcnow().strftime("%Y-%m-%d")
+            })
 
         ROLES = ["Doctor", "Nurse"]
 
@@ -71,6 +92,7 @@ def populate_users():
                     user = User(
                         name=name,
                         email=email,
+                        email_hash=User.hash_email(email),
                         role=role,
                         created_at=created_at
                     )

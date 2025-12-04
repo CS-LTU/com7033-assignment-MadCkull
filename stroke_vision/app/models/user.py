@@ -1,17 +1,34 @@
-# app/models/user.py
 import datetime
+import hashlib
 from app import db, bcrypt
 from flask_login import UserMixin
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer
+from app.security.AES_Encryptor import cipher_suite
+from sqlalchemy import TypeDecorator, String
+
+class EncryptedType(TypeDecorator):
+    """Custom SQLAlchemy type for AES encryption."""
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return cipher_suite.encrypt(str(value))
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return cipher_suite.decrypt(value)
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    name = db.Column(EncryptedType(255), nullable=False)
+    email = db.Column(EncryptedType(255), nullable=False)
+    email_hash = db.Column(db.String(64), unique=True, nullable=False, index=True) # Blind index for login
     password = db.Column(db.String(255), nullable=False)  # store hashed password
-    role = db.Column(db.String(20), nullable=False, default="Doctor")
+    role = db.Column(EncryptedType(20), nullable=False, default="Doctor")
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # Lockout related fields
@@ -27,6 +44,13 @@ class User(db.Model, UserMixin):
     def check_password(self, password: str) -> bool:
         """Verify password against stored hash."""
         return bcrypt.check_password_hash(self.password, password)
+
+    @staticmethod
+    def hash_email(email: str) -> str:
+        """Generate a SHA256 hash of the normalized email for lookups."""
+        if not email:
+            return ""
+        return hashlib.sha256(email.lower().strip().encode()).hexdigest()
 
     # ---------- Lockout helpers ----------
     def increment_failed_attempts(self, commit: bool = True):
@@ -77,8 +101,7 @@ class User(db.Model, UserMixin):
 
     def generate_unlock_token(self, purpose: str = "unlock", expires_sec: int = 3600):
         """
-        Create a time-limited token. Use purpose if you want to distinguish token types.
-        expires_sec is advisory when verifying using loads(..., max_age=...).
+        Create a time-limited token.
         """
         s = self._get_serializer()
         return s.dumps({"user_id": self.id, "purpose": purpose})

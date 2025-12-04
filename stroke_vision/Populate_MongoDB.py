@@ -1,11 +1,21 @@
-# realistic_population_generator_fixed.py
-from mongoengine import connect
+# Populate_MongoDB.py
+import os
+import sys
+from mongoengine import connect, disconnect
 from datetime import datetime, timedelta
 import random
 import math
 from faker import Faker
+from dotenv import load_dotenv
+
+# Ensure we can import from app
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
+
+# Load environment variables
+load_dotenv()
 
 fake = Faker(["en_us"])
 fake.seed_instance(42)
@@ -164,20 +174,15 @@ def sample_smoking_status(age, gender):
         return "Unknown" if random.random() < 0.02 else "Never Smoked"
 
 
-# ---- fixed: only return allowed work_type values ----
 def sample_work_type(age):
-    # Map ages into allowed categories only
     if age < 15:
         return "Children"
     if age < 22:
-        # Younger adults: many haven't been in formal jobs yet
         return random.choice(["Never Worked", "Private"])
     if age >= 65:
-        # elderly — no 'Retired' in schema, so prefer 'Private' or 'Self-Employed' or 'Govt Job'
         return random.choices(
             ["Private", "Self-Employed", "Govt Job"], weights=[0.6, 0.25, 0.15], k=1
         )[0]
-    # otherwise working-age adults
     return random.choice(["Govt Job", "Private", "Self-Employed", "Never Worked"])
 
 
@@ -209,7 +214,6 @@ def generate_patient_data():
     heart_disease = sample_heart_disease(age, hypertensive)
     smoking_status = sample_smoking_status(age, gender)
     work_type = sample_work_type(age)
-    # Safety clamp: ensure work_type is valid for Patient model
     if work_type not in ALLOWED_WORK_TYPES:
         work_type = "Private"
     ever_married = sample_ever_married(age)
@@ -250,17 +254,51 @@ def generate_patient_data():
 
 
 def generate_database(num_records=5000):
-    connect("StrokeDB")
+    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/StrokeDB")
+    print(f"Connecting to database at: {mongo_uri}")
+    connect(host=mongo_uri)
+    
     saved = 0
-    for _ in range(num_records):
+    print(f"Starting population of {num_records} records...")
+    
+    for i in range(num_records):
         try:
             patient = generate_patient_data()
             patient.save()
             saved += 1
+            
+            # --- Encryption Verification (First record only) ---
+            if i == 0:
+                print("\n--- ENCRYPTION VERIFICATION (First Record) ---")
+                raw_coll = Patient._get_collection()
+                raw_doc = raw_coll.find_one({"patient_id": patient.patient_id})
+                
+                encrypted_fields = ["age", "gender", "bmi", "smoking_status"]
+                print(f"Patient ID: {patient.patient_id} (Plain)")
+                print(f"Name: {patient.name} (Plain)")
+                
+                for field in encrypted_fields:
+                    val = raw_doc.get(field)
+                    # Check if string and contains Fernet signature (gAAAAA...)
+                    is_encrypted = isinstance(val, str) and val.startswith("gAAAAA")
+                    status = "✅ Encrypted" if is_encrypted else "❌ PLAIN (ERROR)"
+                    print(f"{field}: {status}")
+                
+                print(f"Stroke Risk: {raw_doc.get('stroke_risk')} (Plain)")
+                print("----------------------------------------------\n")
+
+            if (i + 1) % 100 == 0:
+                print(f"Processed {i + 1}/{num_records} records...")
+                
         except Exception as e:
-            print(f"Error generating patient: {str(e)}")
-    print(f"Successfully generated {saved} patient records (requested {num_records})")
+            print(f"Error generating patient at index {i}: {str(e)}")
+            break
+
+    print(f"Successfully generated {saved} patient records.")
+    disconnect()
 
 
 if __name__ == "__main__":
-    generate_database()
+    # You can change this to 5000 for full population
+    num = 2765
+    generate_database(num_records=num)

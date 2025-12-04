@@ -72,11 +72,13 @@ def update_self_profile():
         user.name = new_name
 
     if new_email and new_email != user.email:
-        if User.query.filter(User.email == new_email).filter(User.id != user.id).first():
+        new_hash = User.hash_email(new_email)
+        if User.query.filter(User.email_hash == new_hash).filter(User.id != user.id).first():
             return jsonify({"success": False, "message": "Email already in use by another account."}), 409
         
         changed_fields.append("email")
         user.email = new_email
+        user.email_hash = new_hash
 
     if not new_name and not new_email:
         return jsonify({"success": False, "message": "No new data provided."}), 400
@@ -177,12 +179,14 @@ def update_user_email():
     if not user:
         return jsonify({"success": False, "message": "User not found."}), 404
 
-    # Check conflict
-    if User.query.filter(User.email == new_email).filter(User.id != user_id).first():
+    # Check conflict with hash
+    new_hash = User.hash_email(new_email)
+    if User.query.filter(User.email_hash == new_hash).filter(User.id != user_id).first():
          return jsonify({"success": False, "message": "Email already in use by another account."}), 409
 
     old_email = user.email
     user.email = new_email
+    user.email_hash = new_hash
     
     try:
         log_security(f"Admin updated email for user {user_id}. {old_email} -> {new_email}", level=1)
@@ -326,7 +330,8 @@ def update_self_email_api():
     if "@" not in new_email:
         return jsonify({"success": False, "message": "Invalid email."}), 400
 
-    if User.query.filter(User.email == new_email).filter(User.id != current_user.id).first():
+    new_hash = User.hash_email(new_email)
+    if User.query.filter(User.email_hash == new_hash).filter(User.id != current_user.id).first():
         return jsonify({"success": False, "message": "Email already in use."}), 409
 
     user = User.query.get(current_user.id)

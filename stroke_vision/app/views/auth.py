@@ -183,8 +183,9 @@ def register():
                     log_security(f"Attempt to create second Admin by email '{email}'.", 4)
                     return redirect(url_for("auth.register"))
 
-        # Check duplicate email with case-insensitive comparison
-        existing = User.query.filter(db.func.lower(User.email) == email).first()
+        # Check duplicate email with blind index (hash)
+        email_hash = User.hash_email(email)
+        existing = User.query.filter_by(email_hash=email_hash).first()
         if existing:
             flash("This email is already registered.", MSG["ERROR"])
             return redirect(url_for("auth.register"))
@@ -193,6 +194,7 @@ def register():
         new_user = User(
             name=name,
             email=email,
+            email_hash=email_hash,
             role=form.role.data,
         )
         new_user.set_password(form.password.data)
@@ -239,10 +241,10 @@ def login():
     if form.validate_on_submit():
         clean_form_str_fields(form)
         email = _clean_string(form.email.data)
-        if email:
-            email = email.lower()
-
-        user = User.query.filter(db.func.lower(User.email) == email).first()
+        
+        # Lookup user using blind index (hash)
+        email_hash = User.hash_email(email)
+        user = User.query.filter_by(email_hash=email_hash).first()
 
         # Config variables
         max_attempts = current_app.config.get("ACCOUNT_LOCKOUT_ATTEMPTS", 5)
