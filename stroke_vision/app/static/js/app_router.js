@@ -1,198 +1,120 @@
 // =======================================================
-// app_router.js (The Central Application Router/Controller)
-// Dependencies:
-// - window.changePlaceholder (from utils.js)
-// - window.loadPatientListAndAttachScroll (from patient_list.js)
-// - Global UI elements (from search_manager.js)
+// app_router.js (Updated for Shell Architecture)
 // =======================================================
 
 (function () {
-  // 1. Declare ALL core UI element references as local 'let' variables.
-  // They will be set inside DOMContentLoaded.
   let appViewRoot;
-  let mainUiContainer;
-  let spotlightContainer;
-  let searchInput;
-  let resultsContainer;
+  let searchContainer;
 
-  // =======================================================
-  // 2. VIEW MANAGEMENT & ANIMATION LOGIC
-  // =======================================================
+  // Track previous view to determine animation direction
+  let previousView = null;
 
-  /**
-   * Toggles the visual state of the main UI shell (Searchbar vs. Active View).
-   */
   function toggleViewActive(isActive) {
-    // Now using the 'let' variables defined in DOMContentLoaded
-    if (!mainUiContainer) return;
-
+    if (!searchContainer) return;
     if (isActive) {
-      mainUiContainer.classList.add("view-active");
-      // Ensure search bar UI is reset when entering a view
-      if (spotlightContainer)
-        spotlightContainer.classList.remove("typing-active", "hover-active");
-      if (searchInput) searchInput.value = "";
-      if (resultsContainer) resultsContainer.innerHTML = "";
-
-      // Check for global helper before calling
+      searchContainer.classList.add("view-active");
       if (window.changePlaceholder) window.changePlaceholder("Back to Search");
     } else {
-      mainUiContainer.classList.remove("view-active");
-      // Use the global utility function
+      searchContainer.classList.remove("view-active");
       if (window.changePlaceholder) window.changePlaceholder("Search");
     }
   }
 
   /**
-   * Generic function to fetch an HTML fragment from a Flask route and inject it
-   * into the main content container (#appViewRoot).
+   * Fetches content and injects it into the SHELL content area.
    */
-  async function loadServerView(url) {
-    // Safety check: ensure the root element has been set by DOMContentLoaded
-    if (!appViewRoot) {
-      console.error("loadServerView failed: appViewRoot not available.");
-      return false;
-    }
+  async function loadServerViewIntoShell(url, viewId) {
+    // 1. Ensure the Shell Exists
+    const contentArea = window.ensureShellStructure();
+    if (!contentArea) return false;
 
-    // Show a generic loading state immediately
-    appViewRoot.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #666;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-                </svg>
-                <p style="margin-top: 15px;">Loading content...</p>
-            </div>
-            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-        `;
+    // 2. Show Loader inside the content area (not destroying the whole window)
+    contentArea.innerHTML = `
+      <div class="view-error-state" style="color:#888;">
+        <div class="spinner-mac" style="border-top-color:#0071e3;"></div>
+      </div>`;
+
+    // 3. Update Header (Title & Back Button)
+    if (window.updateShellHeader) window.updateShellHeader(viewId);
 
     try {
       const response = await fetch(url, {
         headers: { "X-Requested-With": "XMLHttpRequest" },
       });
 
-      if (!response.ok) {
-        if (response.headers.get("content-type")?.includes("text/html")) {
-          const errorHtml = await response.text();
-          appViewRoot.innerHTML = errorHtml;
-          return false;
-        }
-        if (response.status === 403) {
-          throw new Error(
-            `Access Forbidden. Check if the Flask route is correct.`
-          );
-        }
-        throw new Error(`Server returned status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Server status: ${response.status}`);
 
-      // Inject the successfully fetched HTML fragment
       const html = await response.text();
-      appViewRoot.innerHTML = html;
 
+      // 4. Inject Content
+      contentArea.innerHTML = `<div class="view-scroll-container animate-slide-in-right">${html}</div>`;
       return true;
     } catch (err) {
       console.error("View Load Error:", err);
-      appViewRoot.innerHTML = `
-                <div class="list-header">
-                    <h2>Content Error</h2>
-                    <button class="back-button" onclick="window.history.back()">Back</button>
-                </div>
-                <p style="padding: 20px; color: #ef4444;">Failed to load view.<br><small>${err.message}</small></p>
-            `;
-      return false; // Failed
+      contentArea.innerHTML = `
+        <div class="view-error-state">
+           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+           <p>Unable to load content.<br><span style="font-size:12px; opacity:0.7">${err.message}</span></p>
+           <button class="details-button" style="margin-top:15px;" onclick="location.reload()">Retry</button>
+        </div>
+      `;
+      return false;
     }
   }
 
-  /**
-   * The main router function that maps hash segments to API endpoints.
-   */
   async function renderView(viewId, patientId = null) {
-    console.log(`Router: Attempting to render ${viewId} (ID: ${patientId})`);
-
     let url;
-
     switch (viewId) {
-      // FIX: Prepending the Flask Blueprint prefix '/patient' to all API view requests
       case "list":
-        url = "/patient/views/list"; // Corrected Flask route
+        url = "/patient/views/list";
         break;
       case "add":
-        url = "/patient/views/add"; // Corrected Flask route
+        url = "/patient/views/add";
         break;
       case "details":
-        if (!patientId) {
-          console.error("Router: Details requires patient ID.");
-          return;
-        }
-        url = `/patient/views/details/${patientId}`; // Corrected Flask route
-        break;
-      case "edit":
-        if (!patientId) {
-          console.error("Router: Edit requires patient ID.");
-          return;
-        }
-        url = `/patient/views/edit/${patientId}`; // Corrected Flask route
+        if (!patientId) return;
+        url = `/patient/views/details/${patientId}`;
         break;
       case "search":
-        toggleViewActive(false); // Reset to search mode
+        toggleViewActive(false);
+        if (window.animateShellClose) await window.animateShellClose();
+        previousView = null;
         return;
       default:
-        console.warn("Router: Unknown view:", viewId);
-        toggleViewActive(false);
         return;
     }
 
-    // 1. Activate View mode and clear search bar UI
-    toggleViewActive(true);
+    // 1. If we are coming from Search (hidden), activate the UI
+    if (
+      !document.getElementById("appViewRoot").classList.contains("is-active")
+    ) {
+      toggleViewActive(true);
+      if (window.animateShellOpen) window.animateShellOpen();
+    }
 
-    // 2. Fetch and inject the content
-    const loaded = await loadServerView(url);
+    // 2. Load the content
+    const loaded = await loadServerViewIntoShell(url, viewId);
 
-    // 3. Post-load initialization (if successful)
+    // 3. Post-load Init
     if (loaded) {
       if (viewId === "list" && window.loadPatientListAndAttachScroll) {
-        // This calls a function defined in patient_list.js
-        window.loadPatientListAndAttachScroll(1, true);
+        // We pass 'false' for attachScroll initially, wait for DOM render
+        setTimeout(() => window.loadPatientListAndAttachScroll(1, true), 50);
       }
-      // TODO: Add initialization calls here for forms later (e.g., initFormLogic())
     }
+
+    previousView = viewId;
   }
 
-  // =======================================================
-  // GLOBAL NAVIGATION & INITIALIZATION
-  // =======================================================
-
-  /**
-   * Exposed globally (via window) for use in HTML onclick attributes
-   */
   window.handleViewNavigation = function (event, viewId, patientId = null) {
     if (event) event.preventDefault();
-
     let newHash = viewId;
     if (patientId) newHash += `/${patientId}`;
-
-    // Changing the hash triggers the hashChangeHandler automatically
     window.location.hash = `#/${newHash}`;
   };
 
-  /**
-   * Shortcut for the shortcut buttons.
-   */
-  window.handleShortcutClick = function (event, viewId) {
-    window.handleViewNavigation(event, viewId);
-  };
-
-  /**
-   * Listens to hash changes and triggers the router.
-   */
   async function hashChangeHandler() {
-    // CRITICAL CHECK: Wait for the primary element to be found.
-    if (!appViewRoot) {
-      console.warn("appViewRoot not found yet. Retrying hash check in 50ms.");
-      setTimeout(hashChangeHandler, 50);
-      return;
-    }
-
-    const hash = window.location.hash.substring(1); // Remove '#'
+    const hash = window.location.hash.substring(1);
     const parts = hash.split("/");
     const viewId = parts[1];
     const patientId = parts[2] || null;
@@ -200,34 +122,14 @@
     if (viewId) {
       await renderView(viewId, patientId);
     } else {
-      // If hash is empty, default to search view
       await renderView("search");
     }
   }
 
-  // Attach the core listener and run once on load
-  window.addEventListener("hashchange", hashChangeHandler);
-
-  // CRITICAL FIX: All DOM element acquisition and initial setup must be here.
   window.addEventListener("DOMContentLoaded", () => {
-    // 1. Define references now that the DOM is fully loaded
-    appViewRoot = document.getElementById("appViewRoot"); // The content container
-
-    // 2. References exposed by search_manager.js/utils.js
-    mainUiContainer = window.mainUiContainer;
-    spotlightContainer = window.spotlightContainer;
-    searchInput = window.searchInput;
-    resultsContainer = window.resultsContainer;
-
-    // 3. Final check and initialization
-    if (!appViewRoot) {
-      console.error(
-        "Router Initialization Error: Could not find #appViewRoot. Aborting routing setup."
-      );
-      return;
-    }
-
-    // Only run the initial hash check AFTER all critical elements are found
+    appViewRoot = document.getElementById("appViewRoot");
+    searchContainer = window.searchContainer;
+    window.addEventListener("hashchange", hashChangeHandler);
     hashChangeHandler();
   });
-})(); // End of IIFE
+})();

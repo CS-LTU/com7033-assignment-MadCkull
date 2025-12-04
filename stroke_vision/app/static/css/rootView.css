@@ -1,32 +1,174 @@
 /* * rootView.css
- * Styles for the general content area that wraps the dynamic views (e.g., list, details, add).
- * This acts as the inner padding and max-width limiter for the content inside the appViewRoot card.
+ * Defines the main "Mac-like" Shell Container.
+ * This container acts as the window frame for all sub-views (List, Details, Add).
  */
 
-/* The class applied to the outermost element of the dynamic fragment */
-.view-content-wrapper {
-  /* Ensures the list takes up the available space within the appViewRoot */
-  padding: 20px;
-  /* Sets the maximum width for the content for better readability on large screens */
-  max-width: 1200px;
-  margin: 0 auto;
-  /* Allows inner elements to take full height */
-  height: 100%;
+/* --- 1. The Main Shell (Window Frame) --- */
+.appViewRoot-Container {
+  /* Fixed Centering */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+
+  /* Dimensions - User Requested 80vw */
+  width: 80vw;
+  max-width: 1200px; /* Cap it for ultra-wide screens */
+  height: 85vh; /* Use height instead of max-height to force consistent window size */
+  max-height: 900px;
+
+  /* Mac Glassmorphism Base */
+  background: #ffffff;
+  border-radius: 16px; /* Slightly larger radius */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04),
+    /* Border definition */ 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Deep shadow */
+
+  /* Initial State (Hidden) */
+  opacity: 0;
+  transform: translate(-50%, -45%) scale(0.96);
+  pointer-events: none;
+  visibility: hidden;
+
+  /* Flex Layout for Header + Content */
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Clips children to rounded corners */
+  z-index: 1000;
 }
 
-/* General style for placeholder elements (e.g., loading and empty messages) */
-.list-placeholder {
-  padding: 15px;
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
+/* --- 2. Animation States --- */
+
+/* Active (Popped Open) */
+.appViewRoot-Container.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+  transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    /* 'Spring' Pop */ visibility 0.2s;
 }
 
-/* Default spin animation for loading indicators */
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
+/* Exiting (Closing back to Search) */
+.appViewRoot-Container.is-exiting {
+  opacity: 0;
+  transform: translate(-50%, -45%) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* --- 3. The Global Shell Header --- */
+.shell-header {
+  height: 56px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0; /* Never shrink */
+  z-index: 20;
+}
+
+/* The Central Back/Close Button */
+.shell-back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.shell-back-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
+}
+
+.shell-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* --- 4. The Content Area (Where Views Render) --- */
+.shell-content-area {
+  flex-grow: 1;
+  position: relative; /* For sliding absolute children */
+  overflow: hidden; /* Hide overflow during transitions */
+  background: #fff;
+}
+
+/* The actual scrollable container injected by JS */
+.view-scroll-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 40px;
+
+  /* Scrollbar Styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+.view-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+.view-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+/* --- 5. Transition Animations (Slide Left/Right) --- */
+.slide-wrapper {
+  animation-duration: 0.35s;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
   }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation-name: slideInRight;
+}
+.animate-slide-in-left {
+  animation-name: slideInLeft;
+}
+
+/* --- 6. Error State --- */
+.view-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #ff5f57;
+  text-align: center;
 }

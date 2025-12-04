@@ -17,7 +17,7 @@
   const isMixed = (s) => /\d/.test(s) && /[A-Za-z]/.test(s);
 
   // --- UI References (Declare globally inside IIFE, define in DOMContentLoaded) ---
-  let mainUiContainer;
+  let searchContainer;
   let spotlightContainer;
   let searchInput;
   let resultsContainer;
@@ -128,14 +128,14 @@
   document.addEventListener("DOMContentLoaded", () => {
     // --- UI REFERENCES ---
     // Note: Now we can safely assume these elements exist.
-    mainUiContainer = document.getElementById("mainUiContainer");
+    searchContainer = document.getElementById("searchContainer");
     spotlightContainer = document.getElementById("spotlightContainer");
     searchInput = document.getElementById("searchInput");
     resultsContainer = document.getElementById("resultsContainer");
     shortcuts = document.querySelectorAll(".shortcut-btn");
 
     // CRITICAL: Check if main elements were found before proceeding
-    if (!spotlightContainer || !searchInput || !mainUiContainer) {
+    if (!spotlightContainer || !searchInput || !searchContainer) {
       console.error(
         "Search Manager failed to initialize: One or more critical UI elements (spotlightContainer, searchInput, etc.) were not found in the DOM."
       );
@@ -145,7 +145,7 @@
     // 🌟 EXPOSE core elements globally for the router (app_router.js) to manipulate
     window.searchInput = searchInput;
     window.resultsContainer = resultsContainer;
-    window.mainUiContainer = mainUiContainer;
+    window.searchContainer = searchContainer;
     window.spotlightContainer = spotlightContainer;
 
     // =======================================================
@@ -155,7 +155,7 @@
     spotlightContainer.addEventListener("mouseenter", () => {
       if (
         searchInput.value.length === 0 &&
-        !mainUiContainer.classList.contains("view-active")
+        !searchContainer.classList.contains("view-active")
       ) {
         spotlightContainer.classList.add("hover-active");
       }
@@ -164,7 +164,7 @@
     spotlightContainer.addEventListener("mouseleave", () => {
       if (
         searchInput.value.length === 0 &&
-        !mainUiContainer.classList.contains("view-active")
+        !searchContainer.classList.contains("view-active")
       ) {
         spotlightContainer.classList.remove("hover-active");
         // Check for global helper before calling
@@ -176,7 +176,7 @@
       btn.addEventListener("mouseenter", () => {
         if (
           searchInput.value.length === 0 &&
-          !mainUiContainer.classList.contains("view-active")
+          !searchContainer.classList.contains("view-active")
         )
           if (window.changePlaceholder)
             // Check for global helper before calling
@@ -185,7 +185,7 @@
       btn.addEventListener("mouseleave", () => {
         if (
           searchInput.value.length === 0 &&
-          !mainUiContainer.classList.contains("view-active")
+          !searchContainer.classList.contains("view-active")
         )
           if (window.changePlaceholder)
             // Check for global helper before calling
@@ -206,7 +206,7 @@
         spotlightContainer.classList.remove("typing-active");
         if (
           spotlightContainer.matches(":hover") &&
-          !mainUiContainer.classList.contains("view-active")
+          !searchContainer.classList.contains("view-active")
         ) {
           spotlightContainer.classList.add("hover-active");
         }

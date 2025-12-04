@@ -6,13 +6,6 @@
 // =======================================================
 
 (function () {
-  // ------------------------------------------------------
-  // --- OLD FUNCTIONS REMOVED/MIGRATED ---
-  // The old editPatient and deletePatient functions were removed.
-  // The edit logic is replaced by window.handleViewNavigation in app_router.js.
-  // The delete logic will be implemented later using the new API route.
-  // ------------------------------------------------------
-
   // --- General Utility Helpers ---
 
   /**
@@ -84,18 +77,23 @@
 
   // --- UI Utility Helpers ---
 
-  const placeholder = document.getElementById("placeholder");
   // NOTE: This function handles the placeholder text animation (used by search_manager and router)
   function changePlaceholder(text) {
+    // FIX: We query the element INSIDE the function.
+    // This ensures we find it even if utils.js loaded before the HTML body.
+    const placeholder = document.getElementById("placeholder");
+
     if (!placeholder) return;
     if (placeholder.innerText === text && text !== "") return;
 
+    // Case 1: Hiding the placeholder (user is typing)
     if (text === "") {
       placeholder.classList.add("hidden");
       placeholder.classList.remove("entering", "exiting");
       return;
     }
 
+    // Case 2: Showing placeholder from hidden state
     if (placeholder.classList.contains("hidden")) {
       placeholder.classList.remove("hidden");
       placeholder.innerText = text;
@@ -104,6 +102,7 @@
       return;
     }
 
+    // Case 3: Swapping text (Hover effects)
     placeholder.classList.add("exiting");
     placeholder.classList.remove("entering");
 

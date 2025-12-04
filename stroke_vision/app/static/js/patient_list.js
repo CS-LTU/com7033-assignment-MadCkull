@@ -1,6 +1,5 @@
 // =======================================================
-// patient_list.js (List Data Fetching and Rendering)
-// Dependencies: app_router.js (calls loadPatientListAndAttachScroll)
+// patient_list.js (Updated for Shell Architecture)
 // =======================================================
 
 let currentPage = 0;
@@ -8,49 +7,38 @@ let hasMore = true;
 let isFetching = false;
 let observer = null;
 
-// Removed global DOM references as they will be null when the script first runs.
-// The references are now created inside loadPatientListAndAttachScroll.
-
-/**
- * Creates the HTML markup for a single patient row.
- */
 function createPatientRow(patient) {
-  // Determine the color class for the risk level
-  let riskClass = "";
-  if (patient.risk_level === "Critical" || patient.risk_level === "Very High") {
-    riskClass = "risk-critical";
-  } else if (patient.risk_level === "High") {
-    riskClass = "risk-high";
-  } else if (patient.risk_level === "Moderate") {
-    riskClass = "risk-moderate";
-  } else {
-    riskClass = "risk-low";
-  }
+  const riskMap = {
+    Critical: "risk-critical",
+    "Very High": "risk-critical",
+    High: "risk-high",
+    Moderate: "risk-moderate",
+    Low: "risk-low",
+  };
+  const riskClass = riskMap[patient.risk_level] || "risk-low";
 
-  // Use the global handleViewNavigation to go to the details view
   const row = document.createElement("div");
-  row.className = "patient-row";
-  row.setAttribute("data-patient-id", patient.patient_id);
+  row.className = "patient-row grid-layout-7-col"; // Apply grid class here
+
+  // Make entire row clickable
+  row.onclick = (e) =>
+    window.handleViewNavigation(e, "details", patient.patient_id);
+
+  // Chevron SVG
+  const chevronIcon = `<svg class="row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+
   row.innerHTML = `
-        <span>${patient.patient_id}</span>
+        <span class="patient-id">${patient.patient_id}</span>
         <span class="patient-name">${patient.name}</span>
         <span>${patient.age}</span>
         <span>${patient.gender}</span>
-        <span class="${riskClass} risk-level">${patient.risk_level}</span>
-        <span>${patient.added_on}</span>
-        <span class="action-cell">
-            <button class="details-button" onclick="window.handleViewNavigation(event, 'details', '${patient.patient_id}')">
-                Details
-            </button>
-        </span>
+        <span><span class="${riskClass} risk-level">${patient.risk_level}</span></span>
+        <span style="color: #86868b; font-size: 12px;">${patient.added_on}</span>
+        <span>${chevronIcon}</span>
     `;
   return row;
 }
 
-/**
- * Core function to fetch the next page of patient data.
- * Now accepts DOM elements as arguments.
- */
 async function fetchAndRenderPatients(
   listContainer,
   initialLoader,
@@ -63,113 +51,77 @@ async function fetchAndRenderPatients(
   isFetching = true;
   currentPage += 1;
 
-  // Ensure all elements exist before trying to manipulate them
-  const hasLoaders = initialLoader && loadMoreSpinner;
-  const hasContainers = listContainer && emptyMessage;
-
-  // Show spinner for subsequent loads, hide the initial loader
-  if (currentPage > 1) {
-    if (hasLoaders) loadMoreSpinner.classList.remove("hidden");
-  } else {
-    if (hasLoaders) initialLoader.classList.remove("hidden");
-  }
+  if (currentPage > 1 && loadMoreSpinner)
+    loadMoreSpinner.classList.remove("hidden");
 
   try {
-    // FIX: Added the 'X-Requested-With: XMLHttpRequest' header to satisfy the Flask server's is_ajax_request() check.
     const response = await fetch(`/patient/api/data?page=${currentPage}`, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch patient list data.");
-    }
+    if (!response.ok) throw new Error("API Error");
 
     const data = await response.json();
     const patients = data.patients || [];
     hasMore = data.has_next;
 
-    // 1. Handle Initial Load UI
-    if (currentPage === 1 && hasContainers) {
-      // Remove initial loader/empty states before injecting content
+    if (currentPage === 1) {
       if (initialLoader) initialLoader.remove();
       if (emptyMessage) emptyMessage.classList.add("hidden");
     }
 
-    // 2. Render Rows
-    if (listContainer) {
-      if (patients.length > 0) {
-        patients.forEach((patient) => {
-          listContainer.appendChild(createPatientRow(patient));
-        });
-      } else if (currentPage === 1) {
-        // Handle truly empty list on first load
-        if (emptyMessage) emptyMessage.classList.remove("hidden");
-      }
+    if (patients.length > 0 && listContainer) {
+      patients.forEach((patient) => {
+        listContainer.appendChild(createPatientRow(patient));
+      });
+    } else if (currentPage === 1 && emptyMessage) {
+      emptyMessage.classList.remove("hidden");
     }
   } catch (error) {
-    console.error("List load error:", error);
-    // Show error message on the screen
-    if (listContainer) {
-      listContainer.innerHTML += `<div class="list-placeholder error-message" style="color: #ef4444; padding: 20px;">
-                                         Error: ${error.message}
-                                     </div>`;
-    }
-    hasMore = false; // Stop trying to load if there's an error
+    console.error(error);
   } finally {
     isFetching = false;
-    // Hide the "Load More" spinner
     if (loadMoreSpinner) loadMoreSpinner.classList.add("hidden");
-
-    // Disconnect observer if there are no more pages
-    if (!hasMore && observer && scrollSentinel) {
+    if (!hasMore && observer && scrollSentinel)
       observer.unobserve(scrollSentinel);
-      console.log("Observer disconnected: No more patients to load.");
-    }
   }
 }
 
-/**
- * Initializes the list view, resets state, and sets up the Intersection Observer.
- * This is called by app_router.js after the fragment is injected.
- */
 window.loadPatientListAndAttachScroll = function (
   startPage = 1,
   attachScroll = true
 ) {
-  // Define DOM references here, AFTER the fragment is loaded into the DOM
-  const listContainer = document.getElementById("patientList");
+  const listContainer = document.getElementById("patientListRows");
   const initialLoader = document.getElementById("listInitialLoader");
   const loadMoreSpinner = document.getElementById("listLoadMoreSpinner");
   const scrollSentinel = document.getElementById("scrollSentinel");
   const emptyMessage = document.getElementById("listEmptyMessage");
 
-  // Reset state variables
-  currentPage = startPage - 1; // It will be incremented to startPage (1) immediately
+  // IMPORTANT: The scrollable area is now the parent injected by root_view_manager
+  // It has class .view-scroll-container
+  const scrollArea = listContainer
+    ? listContainer.closest(".view-scroll-container")
+    : null;
+
+  currentPage = startPage - 1;
   hasMore = true;
   isFetching = false;
 
-  // Clear list content before fresh load
-  if (listContainer) listContainer.innerHTML = "";
-
-  // Re-attach initial placeholder elements (if they were removed on a previous view)
+  // Clear previous data if reloading
   if (listContainer) {
-    if (initialLoader) listContainer.appendChild(initialLoader);
-    if (emptyMessage) listContainer.appendChild(emptyMessage);
+    // Keep placeholders if they exist, remove rendered rows
+    // Ideally, the server re-renders the fragment so it's fresh anyway
   }
 
-  // Disconnect old observer if it exists
-  if (observer && scrollSentinel) {
-    observer.unobserve(scrollSentinel);
+  if (observer) {
+    observer.disconnect();
     observer = null;
   }
 
-  // Set up the Intersection Observer for infinite scrolling
-  if (attachScroll && scrollSentinel) {
-    const intersectionCallback = (entries, observer) => {
+  if (attachScroll && scrollSentinel && scrollArea) {
+    const intersectionCallback = (entries) => {
       entries.forEach((entry) => {
-        // If the sentinel element is visible and we have more pages to load
         if (entry.isIntersecting && hasMore && !isFetching) {
-          // Pass the necessary DOM references when calling the fetcher
           fetchAndRenderPatients(
             listContainer,
             initialLoader,
@@ -182,16 +134,14 @@ window.loadPatientListAndAttachScroll = function (
     };
 
     observer = new IntersectionObserver(intersectionCallback, {
-      root: document.getElementById("patientListContainer"), // Observe intersection within the scrollable container
-      rootMargin: "0px 0px 50px 0px", // Load content when sentinel is 50px away from the bottom
+      root: scrollArea, // Observe the shell's content area
+      rootMargin: "200px",
       threshold: 0.1,
     });
 
     observer.observe(scrollSentinel);
   }
 
-  // Initial load of the first page
-  // Pass the necessary DOM references for the initial fetch
   fetchAndRenderPatients(
     listContainer,
     initialLoader,

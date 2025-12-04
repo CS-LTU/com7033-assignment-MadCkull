@@ -1,57 +1,45 @@
-<div id="patientListContainer" class="patient-list-view-container">
-  <div class="list-header">
-    <h2>Patient Records Overview</h2>
-    <button class="back-button" onclick="handleViewNavigation(event, 'search')">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-    </button>
+<!-- 
+  No Header, No "Window" container. 
+  Just the list content. 
+  The Shell handles the rest.
+-->
+
+<!-- Sticky Headers (Grid Layout matches CSS) -->
+<div class="list-column-headers grid-layout-7-col">
+  <span>ID</span>
+  <span>Name</span>
+  <span>Age</span>
+  <span>Gender</span>
+  <span>Risk Level</span>
+  <span>Added On</span>
+  <span></span>
+  <!-- Chevron Col -->
+</div>
+
+<!-- The Rows Container -->
+<div id="patientListRows" class="patient-list-container">
+  <!-- Loaders -->
+  <div id="listInitialLoader" class="mac-state-message">
+    <div class="spinner-mac"></div>
+    <p>Loading patient records...</p>
   </div>
 
-  <!-- List Columns Header -->
-  <div class="list-column-headers">
-    <span>ID</span>
-    <span>Name</span>
-    <span>Age</span>
-    <span>Gender</span>
-    <span>Risk Level</span>
-    <span>Added On</span>
-    <span></span>
+  <div id="listEmptyMessage" class="mac-state-message hidden">
+    <p>No records found.</p>
   </div>
+</div>
 
-  <!-- The main container where rows will be appended by JS -->
-  <div id="patientList" class="patient-list-rows">
-    <!-- Placeholder elements are defined here -->
+<!-- Scroll Sentinel -->
+<div id="scrollSentinel" style="height: 20px; width: 100%"></div>
 
-    <!-- 1. Initial Loader (Visible on first load only) -->
-    <div id="listInitialLoader" class="list-placeholder text-center">
-      <p style="padding: 12px; color: #666; font-style: italic">
-        Fetching initial patient list...
-      </p>
-    </div>
-
-    <!-- 2. Empty Message (Hidden by default) -->
-    <div id="listEmptyMessage" class="list-placeholder text-center hidden">
-      <p style="padding: 12px; color: #999">No patient records found.</p>
-    </div>
-  </div>
-
-  <!-- 3. Scroll Sentinel (Invisible target for Intersection Observer) -->
-  <div id="scrollSentinel" style="height: 1px"></div>
-
-  <!-- 4. Load More Spinner (Used for subsequent infinite scrolling loads) -->
+<!-- Load More Spinner -->
+<div
+  id="listLoadMoreSpinner"
+  class="mac-state-message hidden"
+  style="padding: 20px"
+>
   <div
-    id="listLoadMoreSpinner"
-    class="list-placeholder text-center hidden"
-    style="padding: 12px; color: #666"
-  >
-    Loading more...
-  </div>
+    class="spinner-mac"
+    style="width: 16px; height: 16px; border-width: 2px"
+  ></div>
 </div>

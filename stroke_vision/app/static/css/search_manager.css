@@ -20,10 +20,8 @@
 }
 
 /* General Layout Container */
-.main-ui-container {
+.searchContainer {
   width: 100%;
-  max-width: 1200px; /* Constrain width on large screens */
-  min-height: 100vh; /* Full viewport height */
   margin: 0 auto;
   position: relative;
   padding: 20px;
@@ -51,7 +49,7 @@
 }
 
 /* State: When the list is active, hide the search container */
-.main-ui-container.view-active .gooey-container {
+.searchContainer.view-active .gooey-container {
   opacity: 0;
   transform: translateY(40px);
   pointer-events: none;
@@ -310,4 +308,8 @@ input {
 }
 .result-item:hover .result-arrow {
   opacity: 1;
+}
+
+.svg-filters {
+  display: none !important;
 }
