@@ -1,0 +1,142 @@
+<!-- 
+  Unified Patient Form (Add & Edit)
+  Loaded dynamically into the Shell.
+-->
+<div class="form-view-container">
+  <!-- 1. Header Section -->
+  <div class="form-hero">
+    <div class="hero-left">
+      <div class="hero-icon-box">
+        <span class="material-icons">
+          {% if patient %}edit{% else %}person_add{% endif %}
+        </span>
+      </div>
+      <div class="hero-info">
+        <h1 class="hero-title">
+          {% if patient %}Edit Patient{% else %}New Patient{% endif %}
+        </h1>
+        <p class="hero-subtitle">
+          {% if patient %}Update details for {{ patient.name }}{% else %}Enter
+          patient demographics and health metrics{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. The Form -->
+  <!-- We use a data attribute to tell JS if we are editing -->
+  <form
+    id="patientForm"
+    class="modern-form"
+    onsubmit="window.handlePatientSubmit(event)"
+  >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    <!-- Hidden ID for Edit Mode -->
+    {% if patient %}
+    <input type="hidden" name="patient_id" value="{{ patient.patient_id }}" />
+    {% endif %}
+
+    <div class="form-grid-layout">
+      <!-- Section: Identity -->
+      <div class="form-section">
+        <h3 class="section-title">Identity</h3>
+
+        <div class="input-group full-width">
+          <label>Full Name</label>
+          {{ form.name(class="modern-input", placeholder="e.g. John Doe") }}
+        </div>
+
+        <div class="grid-2-col">
+          <div class="input-group">
+            <label>Age</label>
+            {{ form.age(class="modern-input", placeholder="Years") }}
+          </div>
+          <div class="input-group">
+            <label>Gender</label>
+            {{ form.gender(class="modern-select") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Social -->
+      <div class="form-section">
+        <h3 class="section-title">Social Factors</h3>
+
+        <div class="grid-2-col">
+          <div class="input-group">
+            <label>Marital Status</label>
+            {{ form.ever_married(class="modern-select") }}
+          </div>
+          <div class="input-group">
+            <label>Residence</label>
+            {{ form.residence_type(class="modern-select") }}
+          </div>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Work Type</label>
+          {{ form.work_type(class="modern-select") }}
+        </div>
+      </div>
+
+      <!-- Section: Medical Metrics -->
+      <div class="form-section">
+        <h3 class="section-title">Medical Metrics</h3>
+
+        <div class="grid-2-col">
+          <div class="input-group">
+            <label>Avg Glucose</label>
+            <div class="input-wrapper">
+              {{ form.avg_glucose_level(class="modern-input") }}
+              <span class="input-suffix">mg/dL</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>BMI</label>
+            {{ form.bmi(class="modern-input") }}
+          </div>
+        </div>
+
+        <div class="input-group full-width">
+          <label>Smoking Status</label>
+          {{ form.smoking_status(class="modern-select") }}
+        </div>
+      </div>
+
+      <!-- Section: Conditions -->
+      <div class="form-section">
+        <h3 class="section-title">Conditions</h3>
+        <div class="toggles-grid">
+          <!-- Custom Toggle for Heart Disease -->
+          <div class="toggle-item">
+            <label>Heart Disease</label>
+            {{ form.heart_disease(class="modern-select") }}
+          </div>
+
+          <!-- Custom Toggle for Hypertension -->
+          <div class="toggle-item">
+            <label>Hypertension</label>
+            {{ form.hypertension(class="modern-select") }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Form Actions -->
+    <div class="form-footer-actions">
+      <button
+        type="button"
+        class="btn-cancel"
+        onclick="window.handleViewNavigation(event, 'search')"
+      >
+        Cancel
+      </button>
+
+      <button type="submit" class="btn-submit" id="btnSave">
+        <span class="material-icons">save</span>
+        {% if patient %}Update Record{% else %}Save Record{% endif %}
+      </button>
+    </div>
+  </form>
+</div>

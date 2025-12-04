@@ -176,18 +176,6 @@ def api_patient_list_view():
     return render_template("patient/patient_list_fragment.html")
 
 
-@patient_bp.route("/views/add", methods=["GET"])
-@login_required
-def api_add_patient_view():
-    """Renders the HTML fragment for the Add Patient form."""
-    if not is_ajax_request():
-        return jsonify({"error": "Unauthorized access to API view"}), 403
-
-    form = PatientForm()
-    # We assume 'patient/add_patient_fragment.html' is a partial version
-    return render_template("patient/add_patient_fragment.html", form=form)
-
-
 @patient_bp.route("/views/details/<patient_id>", methods=["GET"])
 @login_required
 def api_details_patient_view(patient_id):
@@ -241,6 +229,21 @@ def api_details_patient_view(patient_id):
     )
 
 
+@patient_bp.route("/views/add", methods=["GET"])
+@login_required
+def api_add_patient_view():
+    """Renders the HTML fragment for the Add Patient form."""
+    if not is_ajax_request():
+        return jsonify({"error": "Unauthorized access to API view"}), 403
+
+    form = PatientForm()
+    # Use the UNIFIED fragment.
+    # We do NOT pass a 'patient' object here, so the template knows it's 'Add Mode'.
+    return render_template(
+        "patient/patient_form_fragment.html", form=form, patient=None
+    )
+
+
 @patient_bp.route("/views/edit/<patient_id>", methods=["GET"])
 @login_required
 def api_edit_patient_view(patient_id):
@@ -254,9 +257,10 @@ def api_edit_patient_view(patient_id):
 
     # The form object handles pre-filling data correctly
     form = PatientForm(obj=patient)
-    # We assume 'patient/edit_patient_fragment.html' is a partial version
+
+    # We PASS the 'patient' object here, so the template knows it's 'Edit Mode'.
     return render_template(
-        "patient/edit_patient_fragment.html", form=form, patient=patient
+        "patient/patient_form_fragment.html", form=form, patient=patient
     )
 
 
