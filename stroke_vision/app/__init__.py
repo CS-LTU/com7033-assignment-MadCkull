@@ -10,6 +10,9 @@ from mongoengine import connect
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_wtf.csrf import generate_csrf
 
+# Logging
+from app.utils.log_utils import log_security
+
 # Initialize extensions
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -67,22 +70,45 @@ def create_app():
 
     app.register_blueprint(dashboard_bp)
 
+    from app.views.log_manager import log_manager_bp
+
+    app.register_blueprint(log_manager_bp)
+
     # Connect to MongoDB
     connect(host=app.config["MONGO_URI"])
 
     # Error handlers
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
+        try:
+            log_security(f"CSRF token missing/invalid - {str(e)}", level=2)
+        except Exception:
+            pass
+
         return jsonify(
             {"error": "CSRF token missing or invalid", "message": str(e)}
         ), 400
 
     @app.errorhandler(400)
     def handle_bad_request(e):
+        try:
+            log_security(f"Bad Request - {str(e)}", level=2)
+        except Exception:
+            pass
+
         return jsonify({"error": "Bad Request", "message": str(e)}), 400
 
     @app.errorhandler(500)
     def handle_server_error(e):
+        try:
+            log_security(
+                "Internal Server Error: An unexpected error occurred. "
+                f"Exception: {str(e)}",
+                level=3,
+            )
+        except Exception:
+            pass
+
         return jsonify(
             {
                 "error": "Internal Server Error",
@@ -96,7 +122,7 @@ def create_app():
         if "text/html" in response.headers.get("Content-Type", ""):
             response.set_cookie(
                 "csrf_token",
-                generate_csrf(),  # Using the imported generate_csrf function
+                generate_csrf(),
                 secure=True,
                 samesite="Strict",
                 httponly=True,
@@ -107,7 +133,15 @@ def create_app():
     def load_user(user_id):
         from app.models.user import User
 
-        return User.query.get(int(user_id))
+        user = User.query.get(int(user_id))
+        if user is None:
+            try:
+                log_security(
+                    f"User loader failed to find user with id={user_id}", level=2
+                )
+            except Exception:
+                pass
+        return user
 
     @app.route("/")
     def home():

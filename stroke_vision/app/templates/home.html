@@ -3,6 +3,10 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/home.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/logs.css') }}"
+/>
 {% endblock %} {% block content %} {% if current_user.is_authenticated %}
 <div class="navBar-Container">{% include 'partials/navBar.html' %}</div>
 <div class="AppLogoContainer">
@@ -36,4 +40,6 @@
     >
   </div>
 </div>
-{% endif %} {% endblock %} {% block extra_js %} {% endblock %}
+{% endif %} {% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/logs.js') }}"></script>
+{% endblock %}

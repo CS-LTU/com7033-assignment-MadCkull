@@ -36,7 +36,7 @@
       </div>`;
 
     // 3. Update Header (Title & Back Button)
-    if (window.updateShellHeader) window.updateShellHeader(viewId);
+    if (window.updateShellHeader) window.updateShellHeader(viewId, previousView);
 
     // 4. Fetch the content
     try {
@@ -102,6 +102,10 @@
       url = "/admin/users/view"; // New consolidated User Manager View
     } else if (viewId === "dashboard") {
       url = "/dashboard/view";
+    } else if (viewId === "activity") {
+      url = "/logs/view/activity";
+    } else if (viewId === "changelog") {
+      url = "/logs/view/changelog";
     } else if (viewId === "search") {
       // For search, we hide the shell, so no load is needed.
       if (previousView && previousView !== "search") {
@@ -141,6 +145,10 @@
 
       if (viewId === "dashboard" && window.dashboard) {
         window.dashboard.init();
+      }
+
+      if ((viewId === "activity" || viewId === "changelog") && window.logManager) {
+        window.logManager.init(viewId);
       }
     }
 

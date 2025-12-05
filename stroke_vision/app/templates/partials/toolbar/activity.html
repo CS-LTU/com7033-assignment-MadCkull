@@ -1,0 +1,40 @@
+<div class="log-view-container">
+    <div class="log-header">
+        <div class="header-title">
+            <span class="material-icons">activity</span>
+            <h2>Activity Log</h2>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="window.logManager.loadActivityLogs()">
+                <span class="material-icons" style="font-size: 18px;">refresh</span>
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Security Logs Table -->
+    <div class="log-table-wrapper">
+        <table class="log-table" id="activityLogTable">
+            <thead>
+                <tr>
+                    <th style="width: 140px;">Timestamp</th>
+                    <th style="width: 180px;">User</th>
+                    <th>Action Details</th>
+                    <th style="width: 150px; text-align: right;">Client</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JS will inject rows here -->
+            </tbody>
+        </table>
+        
+        <div id="activityLoader" class="log-loader">
+            <div class="spinner-mac"></div>
+        </div>
+        
+        <div id="activityEmptyState" class="empty-state" style="display: none;">
+            <span class="material-icons">history_toggle_off</span>
+            <p>No activity records found.</p>
+        </div>
+    </div>
+</div>

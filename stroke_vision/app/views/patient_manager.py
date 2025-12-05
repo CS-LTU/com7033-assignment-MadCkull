@@ -4,12 +4,12 @@ from app.forms.patient_form import PatientForm
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
 from app.utils.id_generator import IDGenerator
+from app.utils.log_utils import log_security, log_activity
 from datetime import datetime
 from flask_login import current_user, login_required
 import traceback
 import numpy as np
 import json
-
 
 patient_bp = Blueprint("patient", __name__)
 stroke_predictor = StrokePredictor()
@@ -130,6 +130,7 @@ def api_patient_data():
     """Fetches paginated patient data as JSON for the client-side list rendering."""
     # ⚠️ ADDED: Security check to ensure this data endpoint is accessed via AJAX
     if not is_ajax_request():
+        log_security("Unauthorized API data access attempt.", level=3)
         return jsonify({"error": "Unauthorized access to data API"}), 403
 
     try:
@@ -143,6 +144,11 @@ def api_patient_data():
             Patient.objects.order_by("-record_entry_date").skip(skip).limit(limit)
         )
         total_count = Patient.objects.count()
+
+        # Log access to patient list API (informational)
+        log_activity(
+            f"Accessed patient list via API (page={page}, limit={limit}).", level=1
+        )
 
         # 2. Prepare JSON response
         patient_list = []
@@ -174,6 +180,7 @@ def api_patient_data():
 
     except Exception as e:
         print(f"Error fetching patient data: {str(e)}")
+        log_activity(f"Error fetching patient data: {str(e)}", level=3)
         return jsonify(
             {"success": False, "message": "Failed to load patient data."}
         ), 500
@@ -191,6 +198,7 @@ def api_patient_data():
 def api_patient_list_view():
     """Renders the HTML container/shell for the Patient List view."""
     if not is_ajax_request():
+        log_security("Unauthorized access to patient list view endpoint.", level=3)
         return jsonify({"error": "Unauthorized access to API view"}), 403
 
     # We assume 'patient/patient_list_fragment.html' is a minimal template
@@ -204,20 +212,16 @@ def api_details_patient_view(patient_id):
     """
     Fetches patient data and renders the HTML fragment for the details view.
     """
-    # Security check: Ensure this is an AJAX request (optional but good practice)
-    # if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-    #    return jsonify({"error": "Unauthorized"}), 403
-
     patient = Patient.objects(patient_id=patient_id).first()
 
     if not patient:
+        log_activity(f"Patient details requested but not found: {patient_id}", level=2)
         return jsonify({"error": "Patient not found"}), 404
 
-    # Calculate Risk Class for UI (matches patient_details.css)
-    # We assume patient.risk_level exists, or we derive it from stroke_risk
-    # If your model only has stroke_risk (number), calculate the level string first.
+    # Log viewing a patient's details (sensitive patient data access)
+    log_activity(f"Viewed patient details: {patient_id}", level=1)
 
-    # Example logic if 'risk_level' is stored in DB:
+    # Calculate Risk Class for UI (matches patient_details.css)
     risk_level_str = patient.risk_level if hasattr(patient, "risk_level") else "Low"
     risk_class_str = get_risk_class(risk_level_str)
 
@@ -273,6 +277,9 @@ def patient_form(patient_id):
                 if not patient:
                     # If patient not found, flash error and redirect or return error fragment
                     flash(f"Patient ID {patient_id} not found.", "warning")
+                    log_security(
+                        f"Attempted to edit non-existent patient: {patient_id}", level=2
+                    )
                     return redirect(url_for("home"))  # Redirect full page
 
                 # Populate the form with patient data for editing
@@ -297,6 +304,9 @@ def patient_form(patient_id):
             except Exception as e:
                 print(f"Error fetching patient {patient_id} for edit: {e}")
                 traceback.print_exc()
+                log_activity(
+                    f"Error loading patient {patient_id} for edit: {str(e)}", level=3
+                )
                 flash("Error loading patient details for editing.", "danger")
                 return redirect(url_for("home"))
 
@@ -354,6 +364,10 @@ def patient_form(patient_id):
                 # EDIT: Fetch existing patient
                 patient = Patient.objects(patient_id=patient_id_from_form).first()
                 if not patient:
+                    log_activity(
+                        f"Patient update attempted but not found: {patient_id_from_form}",
+                        level=2,
+                    )
                     return jsonify(
                         {"success": False, "message": "Patient not found for update"}
                     ), 404
@@ -386,6 +400,18 @@ def patient_form(patient_id):
             # Save to database
             patient.save()
 
+            # Log the add/update event (activity log)
+            if is_edit:
+                log_activity(
+                    f"Updated patient record: {patient.patient_id} (risk={risk_percent}, level={risk_level})",
+                    level=1,
+                )
+            else:
+                log_activity(
+                    f"Added new patient record: {patient.patient_id} (risk={risk_percent}, level={risk_level})",
+                    level=1,
+                )
+
             # 5. Return JSON response for client-side redirection/modal
             action = "updated" if is_edit else "added"
             return jsonify(
@@ -402,6 +428,7 @@ def patient_form(patient_id):
         except Exception as e:
             print(f"Error processing form submission: {e}")
             traceback.print_exc()
+            log_activity(f"Error processing form submission: {str(e)}", level=4)
             return jsonify(
                 {
                     "success": False,
@@ -450,7 +477,14 @@ def predict_risk():
         try:
             risk_percentage = float(stroke_predictor.predict_risk(prediction_data))
             risk_level = get_risk_level(risk_percentage)
+            # Log prediction attempt (activity)
+            log_activity(
+                f"Prediction computed (inline API): risk={risk_percentage}, level={risk_level}",
+                level=1,
+            )
         except ValueError as e:
+            # Bad input / model error for prediction
+            log_activity(f"Prediction failed due to bad input: {str(e)}", level=2)
             return jsonify({"success": False, "message": str(e)}), 400
 
         # Check if this is an update (edit) or create (add)
@@ -501,6 +535,12 @@ def predict_risk():
 
                 patient.save()
                 response_patient = patient
+
+                # Log update (activity)
+                log_activity(
+                    f"Updated patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
+                    level=1,
+                )
             else:
                 # Create new patient (existing behaviour)
                 new_patient = Patient(
@@ -525,6 +565,12 @@ def predict_risk():
                 new_patient.save()
                 response_patient = new_patient
 
+                # Log creation (activity)
+                log_activity(
+                    f"Created patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
+                    level=1,
+                )
+
             # Build response using custom encoder to handle numpy types
             response = {
                 "success": True,
@@ -544,6 +590,7 @@ def predict_risk():
         except Exception as e:
             print(f"Error saving/updating patient: {str(e)}")
             print(traceback.format_exc())
+            log_activity(f"Error saving/updating patient: {str(e)}", level=4)
             return jsonify(
                 {
                     "success": False,
@@ -554,6 +601,7 @@ def predict_risk():
     except Exception as e:
         print(f"Unexpected error in predict_risk: {str(e)}")
         print(traceback.format_exc())
+        log_activity(f"Unexpected error in predict_risk: {str(e)}", level=4)
         return jsonify(
             {"success": False, "message": f"An unexpected error occurred: {str(e)}"}
         ), 500
@@ -566,6 +614,10 @@ def delete_patient(patient_id):
     try:
         # Check if user is admin
         if current_user.role != "admin":
+            log_security(
+                f"Unauthorized delete attempt for patient {patient_id} by user {current_user.username}",
+                level=3,
+            )
             return jsonify(
                 {
                     "success": False,
@@ -576,9 +628,15 @@ def delete_patient(patient_id):
         # Find and delete the patient
         patient = Patient.objects(patient_id=patient_id).first()
         if not patient:
+            log_activity(
+                f"Delete attempted for non-existent patient: {patient_id}", level=2
+            )
             return jsonify({"success": False, "message": "Patient not found"}), 404
 
         patient.delete()
+
+        # Log successful deletion in security log (sensitive action)
+        log_security(f"Deleted patient record: {patient_id}", level=1)
 
         return jsonify(
             {
@@ -590,6 +648,7 @@ def delete_patient(patient_id):
 
     except Exception as e:
         print(f"Error deleting patient: {str(e)}")
+        log_security(f"Error deleting patient {patient_id}: {str(e)}", level=4)
         return jsonify(
             {"success": False, "message": f"Error deleting patient: {str(e)}"}
         ), 500
@@ -601,7 +660,9 @@ def patients_count():
     # This is already a JSON API endpoint, so no changes needed here.
     try:
         count = Patient.objects.count()
+        log_activity(f"Accessed patient count endpoint (count={count})", level=1)
         return jsonify({"count": count})
     except Exception as error:
         print("Error counting patients:", str(error))
+        log_activity(f"Error counting patients: {str(error)}", level=3)
         return jsonify({"error": "Failed to count patients"}), 500

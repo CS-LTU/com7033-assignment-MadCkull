@@ -13,6 +13,9 @@ from wtforms import StringField, PasswordField, SelectField
 from wtforms.validators import DataRequired, Email, Length, Regexp
 from app import db
 from app.models.user import User
+
+# NOTE: Ensure this path is correct based on your structure (e.g., app.utils.log_utils)
+from app.utils.log_utils import log_security
 import logging
 
 logger = logging.getLogger(__name__)
@@ -117,6 +120,15 @@ def register():
                 try:
                     db.session.add(new_user)
                     db.session.commit()
+
+                    # --- LOGGING ADDITION (Success) ---
+                    # Log successful user creation
+                    log_security(
+                        f"Registered new user '{new_user.name}' ({new_user.email}) with role '{new_user.role}'.",
+                        3,
+                    )
+                    # ----------------------------------
+
                     flash("Registration successful! Please login.", MSG["SUCCESS"])
                     redirect_to = url_for("auth.login")
                 except Exception:
@@ -149,11 +161,27 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
+
         if user and user.check_password(form.password.data):
             login_user(user, remember=True)
+
+            # --- LOGGING ADDITION (Success) ---
+            # Log successful login
+            log_security(f"Login successful for user '{user.email}'.", 3)
+            # ----------------------------------
+
             flash("Login successful!", MSG["SUCCESS"])
             next_page = request.args.get("next")
             return redirect(next_page if next_page else url_for("home"))
+
+        # --- LOGGING ADDITION (Failure) ---
+        # Log failed login attempt
+        log_security(
+            f"Login failure: Invalid credentials provided for email '{form.email.data}'.",
+            4,
+        )
+        # ----------------------------------
+
         flash("Invalid email or password.", MSG["ERROR"])
 
     return render_template("auth/login.html", form=form)
@@ -161,6 +189,12 @@ def login():
 
 @auth.route("/logout")
 def logout():
+    # --- LOGGING ADDITION ---
+    # Log the action before calling logout_user(), as current_user is still available here
+    if current_user.is_authenticated:
+        log_security("User logged out successfully.", 1)
+    # ----------------------------------
+
     logout_user()
     flash("You have been logged out successfully.", MSG["INFO"])
     return redirect(url_for("auth.login"))

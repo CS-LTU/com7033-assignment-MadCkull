@@ -10,6 +10,9 @@ from mongoengine.errors import DoesNotExist, ValidationError as MongoValidationE
 # Adjust import according to your project structure
 from app.models.patient import Patient
 
+# New: logging helper for patient-related actions (visible to doctors & admin)
+from app.utils.log_utils import log_activity
+
 logger = logging.getLogger(__name__)
 
 search_bp = Blueprint("search_manager", __name__, url_prefix="/api/patients")
@@ -30,6 +33,7 @@ try:
     # Create a simple text index (harmless if it already exists)
     coll.create_index([("name", "text")], background=True)
 except Exception as ex:
+    # Important: can't use log_utils here because there's no Flask request / current_user context at import time.
     logger.warning("Could not ensure indexes on patients collection: %s", ex)
 
 
@@ -116,6 +120,7 @@ def suggestions():
             for p in qs.skip(skip).limit(limit):
                 results.append({"patient_id": p.patient_id, "name": p.name})
             has_more = len(results) == limit
+            # NOTE: per your instruction, do NOT log realtime suggestions (would flood logs)
             return jsonify(
                 {"items": results, "page": page, "limit": limit, "has_more": has_more}
             )
@@ -146,6 +151,7 @@ def suggestions():
             )
 
         has_more = len(results) == limit
+        # NOTE: per your instruction, do NOT log realtime suggestions (would flood logs)
         return jsonify(
             {"items": results, "page": page, "limit": limit, "has_more": has_more}
         )
@@ -213,12 +219,31 @@ def list_patients():
             )
 
         has_more = len(items) == limit
+
+        # Log the action: doctor/admin requested a patient list
+        try:
+            log_activity(
+                f"Requested patient list (page={page}, limit={limit}, returned={len(items)})",
+                level=1,
+            )
+        except Exception:
+            # Logging must not break normal flow; keep the endpoint robust.
+            logger.exception("Failed to write activity log for patient list request")
+
         return jsonify(
             {"items": items, "page": page, "limit": limit, "has_more": has_more}
         )
 
     except Exception as ex:
         logger.exception("Error listing patients: %s", ex)
+        # Also record as activity log (higher severity)
+        try:
+            log_activity(
+                f"Error listing patients (page={page}, limit={limit}): {ex}", level=4
+            )
+        except Exception:
+            logger.exception("Failed to write activity log for patient list error")
+
         return jsonify(
             {
                 "items": [],
@@ -237,6 +262,16 @@ def get_patient(patient_id):
     Full patient detail endpoint. patient_id must be 9 digits.
     """
     if not _RE_DIGITS.fullmatch(patient_id) or len(patient_id) != 9:
+        # validation failure: log at a higher (visible) level
+        try:
+            log_activity(
+                f"Attempted fetch with invalid patient_id: {patient_id}", level=3
+            )
+        except Exception:
+            logger.exception(
+                "Failed to write activity log for invalid patient_id request"
+            )
+
         return jsonify(
             {
                 "error": "invalid_patient_id",
@@ -246,27 +281,37 @@ def get_patient(patient_id):
 
     try:
         p = Patient.objects.get(patient_id=patient_id)
+
+        # Log viewing of a patient record (sufficient detail to identify the patient)
+        try:
+            log_activity(f"Viewed patient {patient_id}", level=1)
+        except Exception:
+            logger.exception("Failed to write activity log for patient view")
+
         return jsonify(_patient_full_doc(p))
     except DoesNotExist:
+        # Not found: useful to log so doctors/admin can audit suspicious missing-access attempts
+        try:
+            log_activity(f"Patient not found: {patient_id}", level=2)
+        except Exception:
+            logger.exception("Failed to write activity log for patient not found")
+
         return jsonify({"error": "not_found"}), 404
     except MongoValidationError as mv:
         logger.exception("Validation error fetching patient %s: %s", patient_id, mv)
+        try:
+            log_activity(
+                f"Validation error fetching patient {patient_id}: {mv}", level=3
+            )
+        except Exception:
+            logger.exception(
+                "Failed to write activity log for patient validation error"
+            )
         return jsonify({"error": "invalid_request"}), 400
     except Exception as ex:
         logger.exception("Error fetching patient %s: %s", patient_id, ex)
+        try:
+            log_activity(f"Server error fetching patient {patient_id}: {ex}", level=4)
+        except Exception:
+            logger.exception("Failed to write activity log for patient server error")
         return jsonify({"error": "server_error"}), 500
-
-
-# NOTE:
-# - Register this blueprint inside your create_app() function:
-#     from app.views.search_manager import search_bp
-#     app.register_blueprint(search_bp)   # default prefix: /api/patients
-#
-# - If you want a different prefix, change url_prefix in Blueprint(...) above
-#
-# - Consider enabling text indexes or a dedicated lowercase-name index for faster prefix searches.
-#   Mongo text index is created above as a recommendation; you can also create an index on a 'name_lower' field
-#   if you want very fast prefix searches at scale (store lowercase(name) on write).
-#
-# - For infinite-scroll: frontend should call /api/patients/suggestions?q=...&page=1..N&limit=30 (or list with limit=28)
-#

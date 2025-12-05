@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, jsonify
 from flask_login import login_required
 from app.models.patient import Patient
+from app.utils.log_utils import log_activity, log_security  # added logging imports
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -87,6 +88,14 @@ def get_dashboard_stats():
                 }
             )
 
+        # --- LOGGING: successful dashboard stats generation (patient-related) ---
+        # Level 2 = informational (routine)
+        log_activity(
+            f"Requested dashboard stats. total={total_patients}, high_risk={high_risk_count}, "
+            f"avg_glucose={avg_glucose}, smokers={smokers_count}, scatter_points={len(scatter_data)}",
+            level=2,
+        )
+
         return jsonify(
             {
                 "success": True,
@@ -102,5 +111,14 @@ def get_dashboard_stats():
         )
 
     except Exception as e:
+        # Log both as an activity error (so doctors/admins see the failure) and as a security-level alert for admins.
+        err_msg = f"Dashboard stats generation failed: {type(e).__name__}: {e}"
+
+        # Activity log at highest severity to indicate operation failure (patient-related).
+        log_activity(err_msg, level=4)
+
+        # Security log to ensure admins get visibility for investigation.
+        log_security(f"Dashboard API error encountered. {err_msg}", level=4)
+
         print(f"Dashboard Error: {e}")
         return jsonify({"success": False, "message": str(e)}), 500

@@ -42,25 +42,44 @@
   /**
    * Updates the Global Header state (Title and Back Button mode).
    */
-  window.updateShellHeader = function (viewId) {
+  /**
+   * Updates the Global Header state (Title and Back Button mode).
+   * @param {string} viewId - The current view being shown
+   * @param {string} previousView - The view we came from (optional)
+   */
+  window.updateShellHeader = function (viewId, previousView = null) {
     const backBtn = document.getElementById("shellBackButton");
     const titleEl = document.getElementById("shellTitle");
 
     if (!backBtn || !titleEl) return;
 
     // 1. Set Title
+    // 1. Set Title
     const titles = {
       list: "Patient Database",
       search: "Search",
       details: "Patient Details",
       add: "Add New Record",
+      dashboard: "Dashboard",
+      settings: "Settings",
+      users: "User Manager",
+      activity: "Activity Log",
+      changelog: "Change Log",
     };
     titleEl.innerText = titles[viewId] || "StrokeVision";
 
     // 2. Set Back Button Icon & Functionality
-    // If we are at the "Root" of the modal (list or add), button is Close (X)
-    // If we are deep (details), button is Back (<)
-    const isRootView = ["list", "add"].includes(viewId);
+    // Root views show Close (X)
+    const rootViews = [
+      "list",
+      "add",
+      "dashboard",
+      "settings",
+      "users",
+      "activity",
+      "changelog",
+    ];
+    const isRootView = rootViews.includes(viewId);
 
     if (isRootView) {
       // Close Icon (X)
@@ -69,8 +88,16 @@
     } else {
       // Back Arrow Icon (<)
       backBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
-      // Simple logic: Go back to list if in details
-      backBtn.onclick = () => window.handleViewNavigation(null, "list");
+
+      // Smart Back Navigation
+      backBtn.onclick = () => {
+        if (previousView && previousView !== viewId) {
+          window.handleViewNavigation(null, previousView);
+        } else {
+          // Default fallback if no history
+          window.handleViewNavigation(null, "list");
+        }
+      };
     }
   };
 
