@@ -54,8 +54,8 @@
         text: message,
         duration: 3000,
         close: true,
-        gravity: "top", // `top` or `bottom`
-        position: "right", // `left`, `center` or `right`
+        gravity: "bottom",         // bottom (not top)
+        position: "right",         // right side
         stopOnFocus: true, // Prevents dismissal on focus
         style: {
           background: classes[type] || classes.info,

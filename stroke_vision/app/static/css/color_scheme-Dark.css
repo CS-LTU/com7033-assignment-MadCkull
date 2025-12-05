@@ -1,7 +1,7 @@
 :root {
   /* --- Brand Identity (Apple-inspired Blue) --- */
-  --color-primary: #0a84ff;
-  --color-primary-hover: #409cff;
+  --color-primary: #d5d5d5;
+  --color-primary-hover: #bfbfbf;
   --color-primary-rgb: 10, 132, 255;
 
   /* --- Typography --- */
@@ -21,7 +21,7 @@
   /* --- Borders & Dividers --- */
   --border-light: #2c2c2e;
   --border-medium: #3a3a3c;
-  --border-focus: rgba(10, 132, 255, 0.6);
+  --border-focus: rgba(255, 255, 255, 0.79);
 
   /* --- Status Colors (Backgrounds & Text) --- */
   /* Success - Green */

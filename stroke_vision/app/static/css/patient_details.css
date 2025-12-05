@@ -211,7 +211,6 @@
   justify-content: flex-end;
   gap: 12px;
   padding-top: 20px;
-  border-top: 1px solid var(--border-light);
 }
 
 .btn-action {
@@ -219,31 +218,30 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg) !important;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  border: none;
+  border: none !important;
   transition: all 0.2s;
 }
 
 .btn-action.edit {
-  background: var(--color-primary);
-  color: white;
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 .btn-action.edit:hover {
-  background: var(--color-primary-hover);
+  background: var(--bg-overlay);
   transform: translateY(-1px);
 }
 
 .btn-action.delete {
-  background: var(--status-danger-bg);
-  color: var(--status-danger-text);
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 .btn-action.delete:hover {
-  background: #ffe5e5; /* keeping hex for hover logic or add variable if needed, using generic light red */
-  background: var(--status-danger-bg); /* simplifying to bg since I didn't define hover for danger */
-  filter: brightness(0.95);
+  background: var(--bg-overlay);
+  transform: translateY(-1px);
 }
 
 /* Responsive */

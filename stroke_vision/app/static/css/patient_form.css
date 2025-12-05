@@ -107,7 +107,7 @@
   padding: 0 12px;
   font-size: 14px;
   font-family: inherit;
-  background: var(--bg-app);
+  background: var(--bg-card);
   color: var(--text-main);
   transition: all 0.2s ease;
   width: 100%;

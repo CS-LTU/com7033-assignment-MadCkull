@@ -166,3 +166,21 @@ body {
   padding: 1rem 1.5rem !important; /* spacing-md spacing-lg replacement */
   background: var(--color-primary) !important;
 }
+
+.toastify {
+    padding: 12px 20px;
+    color: var(--text-main);
+    display: inline-block;
+    box-shadow:var(--shadow-sm);
+    background: var(--bg-app);
+    /* background: linear-gradient(135deg, #73a5ff, #5477f5); */
+    position: fixed;
+    opacity: 0;
+    transition: all .4s 
+    cubic-bezier(.215, .61, .355, 1);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-decoration: none;
+    max-width: calc(50% - 20px);
+    z-index: 2147483647;
+}
