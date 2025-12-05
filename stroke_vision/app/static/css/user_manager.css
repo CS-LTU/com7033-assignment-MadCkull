@@ -24,6 +24,7 @@
 .profile-header {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* move actions to right */
   gap: 10px;
   margin-bottom: 20px;
   padding-bottom: 15px;
@@ -68,6 +69,81 @@
   gap: 12px;
   padding-top: 15px;
   border-top: 1px solid #f0f0f0;
+}
+
+.admin-profile-card {
+  background: #fff;
+  border: 1px solid #e5e5e7;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Header layout */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* move actions to right */
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Icon-only button */
+.icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, transform 120ms;
+  min-width: 40px;
+  height: 40px;
+}
+
+.icon-btn .material-icons {
+  font-size: 20px;
+  color: #1d1d1f; /* default icon color */
+}
+
+/* subtle hover */
+.icon-btn:hover {
+  background: #f5f7ff;
+  border-color: #e6eefb;
+  transform: translateY(-1px);
+}
+
+/* danger style for destructive action */
+.icon-btn.danger .material-icons {
+  color: #d23b3b;
+}
+
+/* disabled state used while waiting for API */
+.icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* optional: if you want to keep the old bottom actions hidden */
+.profile-actions {
+  display: none;
 }
 
 /* --- User List Section --- */

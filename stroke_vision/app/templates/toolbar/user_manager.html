@@ -10,7 +10,7 @@
   </div>
 
   <div class="user-list-section">
-    <h2>All Other Users</h2>
+    <h2>Users</h2>
 
     <!-- 2. User List -->
     <div id="user-list-container">
@@ -28,16 +28,24 @@
 
       <form id="actionForm">
         <div class="input-group">
-          <label id="inputLabel" for="actionValue"></label>
-          <input
-            type="text"
-            id="actionValue"
-            name="actionValue"
-            class="modern-input"
-            required
-          />
+          <label id="inputLabel" for="actionField"></label>
+
+          <!-- Dynamic field container. JS will insert either the text input (email)
+             or the select (role). Keep an id so we can query it. -->
+          <div id="actionFieldContainer">
+            <!-- default: email input (keeps previous look) -->
+            <input
+              type="text"
+              id="actionValue"
+              name="actionValue"
+              class="modern-input"
+              required
+            />
+          </div>
+
           <p class="input-help" id="inputHelp"></p>
         </div>
+
         <div class="modal-actions">
           <button
             type="button"

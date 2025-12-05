@@ -1,4 +1,4 @@
-# views/process_patient.py
+# views/patient_manager.py
 from flask import Blueprint, render_template, url_for, request, jsonify, flash, redirect
 from app.forms.patient_form import PatientForm
 from app.models.patient import Patient

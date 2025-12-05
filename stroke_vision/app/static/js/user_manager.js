@@ -1,5 +1,7 @@
 // =======================================================
 // user_manager.js (Unified Client-side logic for Admin User Management)
+// - Role change uses a select (Doctor, Nurse)
+// - Admin password reset shows temp password like other users
 // =======================================================
 
 (function () {
@@ -7,7 +9,8 @@
     LIST: "/admin/api/users",
     UPDATE_EMAIL: "/admin/api/users/update-email",
     UPDATE_ROLE: "/admin/api/users/update-role",
-    RESET_PASSWORD: "/admin/api/users/reset-password/", // Requires ID suffix
+    // This endpoint is used with an ID suffix for target user: API.RESET_PASSWORD + userId
+    RESET_PASSWORD: "/admin/api/users/reset-password/",
     SELF_UPDATE_EMAIL: "/admin/api/self/update-email",
     SELF_RESET_PASSWORD: "/admin/api/self/reset-password",
   };
@@ -20,6 +23,17 @@
 
   /**
    * Sets up and shows the generic action modal (for Email/Role updates).
+   *
+   * If inputLabel suggests a Role change (i.e. contains 'role'), we render a select
+   * with the options ["Doctor", "Nurse"] and keep the element id as 'actionValue'
+   * so submit code reads value uniformly.
+   *
+   * @param {string} title
+   * @param {string} prompt
+   * @param {string} inputLabel
+   * @param {string} inputValue
+   * @param {string} inputHelp
+   * @param {function(string):Promise<void>} onSubmit
    */
   function setupAndShowActionModal(
     title,
@@ -32,26 +46,102 @@
     const modal = document.getElementById("actionModal");
     const form = document.getElementById("actionForm");
 
-    document.getElementById("modalTitle").innerText = title;
-    document.getElementById("modalPrompt").innerText = prompt;
-    document.getElementById("inputLabel").innerText = inputLabel;
+    document.getElementById("modalTitle").innerText = title || "";
+    document.getElementById("modalPrompt").innerText = prompt || "";
+    document.getElementById("inputLabel").innerText = inputLabel || "";
 
-    const inputField = document.getElementById("actionValue");
-    inputField.value = inputValue || "";
-    document.getElementById("inputHelp").innerText = inputHelp;
+    // Replace existing field with either <input id="actionValue"> or <select id="actionValue">
+    // We keep the id 'actionValue' so submit handler reads uniformly.
+    const oldField = document.getElementById("actionValue");
+    if (oldField) oldField.remove();
 
-    // Remove existing listener and attach new one
+    // Determine if it's a role change by inputLabel content
+    const isRole =
+      typeof inputLabel === "string" &&
+      inputLabel.toLowerCase().indexOf("role") !== -1;
+
+    let newField;
+    if (isRole) {
+      // Create select
+      const select = document.createElement("select");
+      select.id = "actionValue";
+      select.name = "actionValue";
+      select.className = "modern-input";
+      select.required = true;
+
+      // Options: Doctor, Nurse (values match display)
+      const roles = ["Doctor", "Nurse"];
+      roles.forEach((r) => {
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        select.appendChild(opt);
+      });
+
+      if (inputValue) select.value = inputValue;
+      newField = select;
+    } else {
+      // Email or other free-text
+      const input = document.createElement("input");
+      input.type = "email";
+      input.id = "actionValue";
+      input.name = "actionValue";
+      input.className = "modern-input";
+      input.required = true;
+      if (inputValue) input.value = inputValue;
+      newField = input;
+    }
+
+    // Insert the new field into the DOM where label was expected to reference it.
+    // We'll try to insert after the label if present; otherwise append to form.
+    const labelEl = document.getElementById("inputLabel");
+    if (labelEl && labelEl.parentNode) {
+      // Insert right after label
+      if (labelEl.nextSibling)
+        labelEl.parentNode.insertBefore(newField, labelEl.nextSibling);
+      else labelEl.parentNode.appendChild(newField);
+    } else {
+      // fallback: append to form
+      form.insertBefore(newField, form.querySelector(".modal-actions"));
+    }
+
+    document.getElementById("inputHelp").innerText = inputHelp || "";
+
+    // Remove any existing handler and attach new one for this modal usage
     form.onsubmit = function (event) {
       event.preventDefault();
-      const value = inputField.value;
-      if (value) {
-        onSubmit(value);
-        window.userManager.closeModal("actionModal");
+      const field = document.getElementById("actionValue");
+      const value = field ? field.value : null;
+      if (value === null || value === "") {
+        // show a short inline hint
+        const help = document.getElementById("inputHelp");
+        if (help) help.innerText = "Please provide a value.";
+        return;
       }
+      // call async onSubmit and close modal on success
+      Promise.resolve(onSubmit(value))
+        .then(() => {
+          closeModal("actionModal");
+        })
+        .catch((err) => {
+          // show error inline if possible, else toast
+          const help = document.getElementById("inputHelp");
+          if (help)
+            help.innerText = err && err.message ? err.message : "Action failed";
+          else
+            window.showToast(
+              err && err.message ? err.message : "Action failed",
+              "danger"
+            );
+        });
     };
 
     modal.classList.remove("hidden");
-    setTimeout(() => inputField.focus(), 300);
+    // Focus the field after a short delay so CSS transitions are done
+    setTimeout(() => {
+      const f = document.getElementById("actionValue");
+      if (f && typeof f.focus === "function") f.focus();
+    }, 200);
   }
 
   /**
@@ -59,63 +149,122 @@
    * @param {string} id The ID of the modal element.
    */
   function closeModal(id) {
-    document.getElementById(id).classList.add("hidden");
+    const m = document.getElementById(id);
+    if (m) m.classList.add("hidden");
     activeAction = {};
   }
 
   // --- Core Action Handlers ---
 
+  // --- Handle Admin Self-Update (Reset Password Only) ---
   /**
-   * Handles update actions for the currently logged-in admin user (self-management).
-   * @param {string} field 'email' or 'password'
+   * Handler for the Admin's self-reset password button.
+   * NOTE: This is now ONLY for the self-reset password function,
+   * as self-profile update is handled by the main /settings/view.
    */
-  window.handleAdminSelfUpdate = function (field) {
-    if (field === "email") {
-      const adminUser = userListCache.find((u) => u.id === currentUserId);
-      if (!adminUser) return;
+  // --- Handle Admin Self-Update (Reset Password or Update Email via modal) ---
+  async function handleAdminSelfUpdate(event, type) {
+    // Find clicked button (for spinner on reset)
+    const button = event?.target?.closest?.("button");
 
+    // --- UPDATE EMAIL: open the same modal used for other users ---
+    if (type === "update-email") {
+      const adminUser = userListCache.find((u) => u.id === currentUserId) || {};
       setupAndShowActionModal(
-        "Update My Email",
-        "Enter your new email address.",
+        "Update Your Email",
+        "Enter the new email address for your admin account.",
         "New Email Address",
-        adminUser.email,
-        "Note: Your role cannot be changed via self-management.",
+        adminUser.email || "",
+        "We will update your contact email immediately (you may want to verify it).",
+        // onSubmit
         async (newEmail) => {
-          await performApiAction(
+          // Use the same performApiAction helper so errors/toasts are consistent
+          const result = await performApiAction(
             API.SELF_UPDATE_EMAIL,
             { email: newEmail },
-            "PATCH",
-            "Email update successful. Reloading profile...",
+            "POST",
+            "Email updated.",
             "Failed to update email."
           );
-          // Reload the list to show the new email
-          await loadUserList();
+
+          // if success, refresh admin profile so displayed email updates
+          if (result && result.success) {
+            await loadUserList();
+          } else {
+            // bubble up as rejection so setupAndShowActionModal shows inline error
+            throw new Error(
+              (result && result.message) || "Email update failed."
+            );
+          }
         }
       );
-    } else if (field === "password") {
+
+      return;
+    }
+
+    // --- RESET PASSWORD: show spinner on the button and call endpoint ---
+    if (!button) {
+      console.error("No button element found for admin self update.");
+      return;
+    }
+
+    const originalContent = button.innerHTML;
+    try {
+      button.disabled = true;
+      button.innerHTML = '<span class="material-icons spin">refresh</span>';
+
       if (
         !confirm(
-          "Are you sure you want to reset your own password? You will receive a new temporary password."
+          "Are you sure you want to reset your own password? A temporary password will be set."
         )
-      )
+      ) {
         return;
+      }
 
-      performApiAction(
+      // Use performApiAction so we get consistent error-handling/toasts
+      const result = await performApiAction(
         API.SELF_RESET_PASSWORD,
         {},
         "POST",
-        "Password reset link/temporary password sent to your email.",
-        "Failed to reset password."
+        null,
+        "Password reset failed."
       );
+
+      if (result && result.success) {
+        // prefer commonly named fields used elsewhere
+        const pwd =
+          result.temp_password || result.new_password || result.password;
+        if (pwd) {
+          const displayEl = document.getElementById("newPasswordDisplay");
+          if (displayEl) displayEl.innerText = pwd;
+          const pm = document.getElementById("passwordModal");
+          if (pm) pm.classList.remove("hidden");
+          else window.showToast("Password: " + pwd, "success");
+        } else {
+          window.showToast(
+            result.message || "Password reset successfully.",
+            "success"
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Admin self-update failed:", err);
+      window.showToast(
+        "An unexpected error occurred: " + (err.message || err),
+        "danger"
+      );
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalContent;
     }
-  };
+  }
 
   /**
    * Handles administrative actions for other users (Email, Role, Password Reset).
    * @param {string} action 'email', 'role', or 'reset_password'
    * @param {number} userId The target user's ID
    */
-  window.handleUserAction = function (action, userId) {
+  function handleUserAction(action, userId) {
     const targetUser = userListCache.find((u) => u.id === userId);
     if (!targetUser) return;
 
@@ -138,9 +287,10 @@
         }
       );
     } else if (action === "role") {
+      // Render a select for role change (Doctor / Nurse)
       setupAndShowActionModal(
         `Change Role for ${targetUser.name}`,
-        `Enter the new role for ${targetUser.name} (e.g., 'Admin', 'Editor', 'Viewer').`,
+        `Select the new role for ${targetUser.name}.`,
         "New Role",
         targetUser.role,
         "Changing roles affects permissions.",
@@ -169,19 +319,32 @@
         API.RESET_PASSWORD + userId,
         {},
         "POST",
-        // Success message is handled within the fetchJson logic to show the modal
         null,
         "Password reset failed."
-      ).then((result) => {
-        if (result && result.success) {
-          // Display the temporary password modal
-          document.getElementById("newPasswordDisplay").innerText =
-            result.new_password;
-          document.getElementById("passwordModal").classList.remove("hidden");
-        }
-      });
+      )
+        .then((result) => {
+          if (result && result.success) {
+            const pwd =
+              result.new_password || result.temp_password || result.password;
+            if (pwd) {
+              const displayEl = document.getElementById("newPasswordDisplay");
+              if (displayEl) displayEl.innerText = pwd;
+              document
+                .getElementById("passwordModal")
+                .classList.remove("hidden");
+            } else {
+              window.showToast(
+                result.message || "Password reset successfully.",
+                "success"
+              );
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Reset password error:", err);
+        });
     }
-  };
+  }
 
   /**
    * Generic API call handler
@@ -202,17 +365,21 @@
         },
       });
 
-      if (result.success) {
+      if (result && result.success) {
         if (successMessage) window.showToast(successMessage, "success");
         return result;
       } else {
-        window.showToast(result.message || errorMessage, "danger");
+        // if result object present but not success show its message
+        const msg =
+          (result && result.message) || errorMessage || "Action failed";
+        window.showToast(msg, "danger");
+        return result || null;
       }
     } catch (error) {
       console.error("API Action Error:", error);
-      window.showToast(errorMessage, "danger");
+      window.showToast(errorMessage || "Action failed", "danger");
+      throw error;
     }
-    return null;
   }
 
   // --- Rendering Functions ---
@@ -233,7 +400,7 @@
       const data = await window.fetchJson(API.LIST);
 
       currentUserId = data.current_user_id;
-      userListCache = data.users;
+      userListCache = data.users || [];
 
       const adminUser = userListCache.find((u) => u.id === currentUserId);
       const otherUsers = userListCache.filter((u) => u.id !== currentUserId);
@@ -271,29 +438,45 @@
    */
   function renderAdminProfile(user) {
     return `
-      <div class="admin-profile-card">
-        <div class="profile-header">
+    <div class="admin-profile-card">
+      <div class="profile-header">
+        <div class="profile-title-left">
           <span class="material-icons">manage_accounts</span>
           <h3>Your Profile (Admin)</h3>
         </div>
 
-        <div class="profile-info-grid">
-          <div><label>Name:</label><span>${user.name}</span></div>
-          <div><label>Role:</label><span class="role-badge">${user.role} (Cannot be changed here)</span></div>
-          <div><label>Email:</label><span>${user.email}</span></div>
-          <div><label>Member Since:</label><span>${user.created_at}</span></div>
-        </div>
-
-        <div class="profile-actions">
-          <button class="btn-action" onclick="window.handleAdminSelfUpdate('email')">
-            <span class="material-icons">email</span> Update Email
+        <div class="header-actions" role="toolbar" aria-label="Profile actions">
+          <!-- Icon-only buttons: title + aria-label for accessibility -->
+          <button
+            class="icon-btn"
+            title="Update email"
+            aria-label="Update email"
+            onclick="window.handleAdminSelfUpdate(event, 'update-email')"
+          >
+            <span class="material-icons">email</span>
           </button>
-          <button class="btn-action btn-danger" onclick="window.handleAdminSelfUpdate('password')">
-            <span class="material-icons">key_off</span> Reset Password
+
+          <button
+            class="icon-btn danger"
+            title="Reset password"
+            aria-label="Reset password"
+            onclick="window.handleAdminSelfUpdate(event, 'reset-password')"
+          >
+            <span class="material-icons">key_off</span>
           </button>
         </div>
       </div>
-    `;
+
+      <div class="profile-info-grid">
+        <div><label>Name:</label><span>${user.name}</span></div>
+        <div><label>Role:</label><span class="role-badge">${user.role} (Cannot be changed here)</span></div>
+        <div><label>Email:</label><span>${user.email}</span></div>
+        <div><label>Member Since:</label><span>${user.created_at}</span></div>
+      </div>
+
+      <!-- Removed bottom action row — actions now live in header -->
+    </div>
+  `;
   }
 
   /**
@@ -331,8 +514,12 @@
    * Copies the temporary password from the modal to the clipboard.
    */
   function copyPassword() {
-    const text = document.getElementById("newPasswordDisplay").innerText;
-    // Use the older execCommand for better iFrame compatibility
+    const textEl = document.getElementById("newPasswordDisplay");
+    if (!textEl) {
+      window.showToast("No password to copy.", "danger");
+      return;
+    }
+    const text = textEl.innerText || textEl.textContent;
     const tempInput = document.createElement("textarea");
     tempInput.value = text;
     document.body.appendChild(tempInput);
@@ -356,13 +543,13 @@
   };
 
   // Attach global handlers needed by HTML
-  window.handleAdminSelfUpdate = window.handleAdminSelfUpdate;
-  window.handleUserAction = window.handleUserAction;
+  window.handleAdminSelfUpdate = handleAdminSelfUpdate;
+  window.handleUserAction = handleUserAction;
 
   // Run on initial page load if the element exists
   window.addEventListener("DOMContentLoaded", () => {
     if (document.querySelector(".user-manager-container")) {
-      // In a dynamic app, the router calls init, but this is a safeguard
+      // router usually calls init; this is a safeguard
       // window.userManager.init();
     }
   });

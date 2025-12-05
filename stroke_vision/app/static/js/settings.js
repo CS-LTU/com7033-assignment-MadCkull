@@ -14,6 +14,10 @@
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    // NOTE: The Python route now supports updating both 'name' and 'email'.
+    // Ensure you update your settings.html form to include the 'email' field with the name="email" attribute
+    // if you want to support changing email via this form.
+
     try {
       // UI Loading State
       submitBtn.disabled = true;
@@ -21,21 +25,18 @@
         '<span class="material-icons spin">refresh</span> Saving...';
 
       // 2. Send Request using the CSRF-enabled fetchJson helper
-      // We must pass the URL and POST data (JSON body) to fetchJson.
-      // Since fetchJson returns the JSON response, we don't need .json().
-      const result = await window.fetchJson("/settings/update_profile", {
-        method: "POST",
+      // *** ROUTE AND METHOD CHANGE: PATCH method used for update, new API path ***
+      const result = await window.fetchJson("/settings/api/profile", {
+        method: "PATCH", // Changed from POST to PATCH
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
-      // Note: If fetchJson throws on a non-200 status, the catch block handles it.
-      // Otherwise, we assume success based on the result structure.
-
       if (result.success) {
-        window.showToast("Profile updated successfully!", "success"); // Use Toast for better UX
+        window.showToast("Profile updated successfully!", "success");
+        // Optional: Update the displayed name in the hero section if needed
         document.querySelector(".hero-name").textContent = data.name;
       } else {
         window.showToast("Error: " + result.message, "danger");
@@ -47,7 +48,7 @@
         "danger"
       );
     } finally {
-      // Reset UI
+      // Restore UI State
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
     }
@@ -75,8 +76,9 @@
         '<span class="material-icons spin">refresh</span> Updating...';
 
       // 2. Send Request using the CSRF-enabled fetchJson helper
-      const result = await window.fetchJson("/settings/change_password", {
-        method: "POST",
+      // *** ROUTE AND METHOD CHANGE: PATCH method used for update, new API path ***
+      const result = await window.fetchJson("/settings/api/change_password", {
+        method: "PATCH", // Changed from POST to PATCH
         headers: {
           "Content-Type": "application/json",
         },
@@ -96,6 +98,7 @@
         "danger"
       );
     } finally {
+      // Restore UI State
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
     }

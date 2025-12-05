@@ -17,7 +17,7 @@
             <label for="name">Name</label>
             <div class="input-icon">
                 <span class="material-icons">person</span>
-                <input type="text" id="name" name="name" value="{{ form.name.data }}" required />
+                <input type="text" id="name" name="name" autocomplete="name" value="{{ form.name.data }}" required />
             </div>
         </div>
 
@@ -25,7 +25,7 @@
             <label for="email">Email</label>
             <div class="input-icon">
                 <span class="material-icons">email</span>
-                <input type="email" id="email" name="email" value="{{ form.email.data }}" required />
+                <input type="email" id="email" name="email" autocomplete="email" value="{{ form.email.data }}" required />
             </div>
         </div>
 
@@ -33,7 +33,7 @@
             <label for="password">Password</label>
             <div class="input-icon">
                 <span class="material-icons">lock</span>
-                <input type="password" id="password" name="password" required />
+                <input type="password" id="password" name="password" autocomplete="new-password" required />
             </div>
         </div>
 

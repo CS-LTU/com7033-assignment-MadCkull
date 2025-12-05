@@ -41,14 +41,18 @@
           </div>
 
           <div class="input-group">
-            <label>Email Address</label>
+            <label
+              >Email Address
+              <small class="helper-text">
+                (Cannot be changed manually)</small
+              ></label
+            >
             <input
               type="email"
               class="modern-input readonly"
               value="{{ current_user.email }}"
               readonly
             />
-            <small class="helper-text">Email cannot be changed manually.</small>
           </div>
 
           <div class="form-actions">
@@ -75,6 +79,7 @@
               name="current_password"
               class="modern-input"
               placeholder="••••••••"
+              autocomplete="current-password"
               required
             />
           </div>
@@ -87,6 +92,7 @@
                 name="new_password"
                 class="modern-input"
                 placeholder="New password"
+                autocomplete="new-password"
                 required
               />
             </div>
@@ -97,6 +103,7 @@
                 name="confirm_password"
                 class="modern-input"
                 placeholder="Repeat password"
+                autocomplete="new-password"
                 required
               />
             </div>

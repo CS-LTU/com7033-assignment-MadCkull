@@ -87,15 +87,15 @@
     if (viewId === "list") {
       // legacy endpoint for patient list
       url = "/patient/views/list";
+    } else if (viewId === "add" && patientId) {
+      // reuse legacy form endpoint for editing
+      url = `/patient/form/${patientId}`;
     } else if (viewId === "add") {
       // new patient form (legacy endpoint)
       url = "/patient/form";
     } else if (viewId === "details" && patientId) {
       // legacy patient details endpoint
       url = `/patient/views/details/${patientId}`;
-    } else if (viewId === "edit" && patientId) {
-      // reuse legacy form endpoint for editing
-      url = `/patient/form/${patientId}`;
     } else if (viewId === "settings") {
       url = "/settings/view"; // Assumed setting view
     } else if (viewId === "users") {
