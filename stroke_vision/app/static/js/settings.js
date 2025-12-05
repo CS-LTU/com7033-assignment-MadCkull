@@ -27,17 +27,15 @@
       });
 
       if (result.success) {
-        window.showToast("Profile updated successfully!", "success");
+        window.notify.success("Profile updated successfully!");
         document.querySelector(".hero-name").textContent = data.name;
       } else {
-        window.showToast("Error: " + result.message, "danger");
+        window.notify.error(result.message);
       }
     } catch (error) {
+
       console.error("Profile update failed:", error);
-      window.showToast(
-        "An unexpected error occurred: " + error.message,
-        "danger"
-      );
+      window.notify.error(error.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
@@ -54,7 +52,7 @@
     const data = Object.fromEntries(formData.entries());
 
     if (data.new_password !== data.confirm_password) {
-      window.showToast("New passwords do not match.", "warning");
+      window.notify.warn("New passwords do not match.");
       return;
     }
 
@@ -73,17 +71,15 @@
       });
 
       if (result.success) {
-        window.showToast("Password changed successfully.", "success");
+        window.notify.success("Password changed successfully.");
         form.reset();
       } else {
-        window.showToast("Error: " + result.message, "danger");
+        window.notify.error("Failed, Please Check your details.");
       }
     } catch (error) {
+
       console.error("Password change failed:", error);
-      window.showToast(
-        "An unexpected error occurred: " + error.message,
-        "danger"
-      );
+      window.notify.error("Failed, Please Check your details.");
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;

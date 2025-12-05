@@ -27,8 +27,7 @@
       const data = await response.json();
 
       if (response.ok && data.success) {
-        if (window.showToast)
-          window.showToast("Record saved successfully!", "success");
+        window.notify.success("Record saved successfully!");
 
         if (data.patient_id) {
           window.handleViewNavigation(null, "details", data.patient_id);
@@ -40,8 +39,7 @@
       }
     } catch (error) {
       console.error("Form Error:", error);
-      if (window.showToast) window.showToast(error.message, "danger");
-      else alert("Error: " + error.message);
+      window.notify.error(error.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnContent;

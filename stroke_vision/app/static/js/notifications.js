@@ -13,29 +13,27 @@ export function showToast(message, type = "info") {
   const style = TOAST_TYPES[type] || TOAST_TYPES.info;
 
   // Build small HTML payload so we can style text and accent dot separately.
-  // We keep escapeMarkup: false so markup works — if messages come from users, sanitize upstream.
   const html = `
     <div class="toast-content">
       <span class="toast-dot" style="background:${style.accentColor};"></span>
       <div class="toast-body" style="color:${style.textColor};">
         ${message}
       </div>
-      <button class="toast-close" aria-label="close">&times;</button>
+      <button class="toast-close" onclick="this.closest('.toastify').remove()">&times;</button>
     </div>
   `;
 
   Toastify({
-    node: null,                // let Toastify create the node
+    node: null,                
     text: html,
-    duration: 40000,
-    gravity: "bottom",         // bottom (not top)
-    position: "right",         // right side
-    close: true,
+    duration: 5000,           // Reduced duration for better UX
+    gravity: "bottom",         
+    position: "right",         
+    close: false,             // We handle close button in HTML
     escapeMarkup: false,
-    className: "toastify-custom", // use our CSS for look + animation
-    offset: { x: 20, y: 22 },  // padding from viewport edge
-    stopOnFocus: true,         // pause timeout on hover/focus
-    // No inline style for bg — CSS controls that for consistent look
+    className: "toastify-custom", 
+    offset: { x: 20, y: 20 },  
+    stopOnFocus: true,         
   }).showToast();
 }
 

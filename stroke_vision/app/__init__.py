@@ -9,6 +9,8 @@ from flask_login import LoginManager
 from mongoengine import connect
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_wtf.csrf import generate_csrf
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Logging
 from app.utils.log_utils import log_security
@@ -19,6 +21,7 @@ bcrypt = Bcrypt()
 jwt = JWTManager()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,6 +35,12 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLITE_DATABASE_URI")
     app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 
+    # Security Configurations
+    app.config["ADMIN_INVITE_CODE"] = os.getenv("ADMIN_INVITE_CODE")
+    app.config["ACCOUNT_LOCKOUT_ATTEMPTS"] = int(os.getenv("ACCOUNT_LOCKOUT_ATTEMPTS", 5))
+    app.config["ACCOUNT_LOCKOUT_PERIOD_SECONDS"] = int(os.getenv("ACCOUNT_LOCKOUT_PERIOD_SECONDS", 900))
+    app.config["RATELIMIT_STRATEGY"] = "fixed-window"
+
     # CSRF specific configurations
     app.config["WTF_CSRF_ENABLED"] = True
     app.config["WTF_CSRF_TIME_LIMIT"] = 3600  # 1 hour
@@ -44,6 +53,7 @@ def create_app():
     jwt.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     # Login Manager
     login_manager.login_view = "auth.login"
@@ -73,6 +83,10 @@ def create_app():
     from app.views.log_manager import log_manager_bp
 
     app.register_blueprint(log_manager_bp)
+
+    from app.views.admin_dashboard import admin_dashboard_bp
+
+    app.register_blueprint(admin_dashboard_bp)
 
     # Database
     connect(host=app.config["MONGO_URI"])

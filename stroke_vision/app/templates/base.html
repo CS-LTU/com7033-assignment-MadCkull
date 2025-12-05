@@ -101,7 +101,17 @@
       href="{{ url_for('static', filename='css/dashboard.css') }}"
     />
 
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/notifications.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components.css') }}"
+    />
     {% block extra_css %}{% endblock %}
+
+    
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -111,6 +121,7 @@
     <script src="{{ url_for('static', filename='js/search_manager.js') }}"></script>
 
     <script src="{{ url_for('static', filename='js/app_router.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 
     <script
       type="module"
@@ -158,8 +169,10 @@
     <script>
       window.FLASH_NOTIFICATIONS = {{ get_flashed_messages(with_categories=True) | default([]) | tojson | safe }};
       document.addEventListener("DOMContentLoaded", () => {
-        if (window.FLASH_NOTIFICATIONS.length > 0 && window.handleNotifications) {
-          window.handleNotifications(window.FLASH_NOTIFICATIONS);
+        // notifications.js will handle this if loaded, but we can trigger it explicitly if it exposes a global
+        // Wait for module to load or checking if function exists
+        if (window.FLASH_NOTIFICATIONS.length > 0 && window.showFlashNotifications) {
+          window.showFlashNotifications();
         }
       });
     </script>

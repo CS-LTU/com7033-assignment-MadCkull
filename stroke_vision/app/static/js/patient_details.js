@@ -29,17 +29,14 @@
       const result = await response.json();
 
       if (response.ok) {
-        if (window.showToast)
-          window.showToast("Record deleted successfully", "success");
-
+        window.notify.success("Record deleted successfully");
         window.handleViewNavigation(null, "list");
       } else {
         throw new Error(result.error || "Failed to delete");
       }
     } catch (error) {
       console.error("Delete error:", error);
-      if (window.showToast) window.showToast(error.message, "danger");
-      else alert("Error: " + error.message);
+      window.notify.error(error.message);
     }
   };
 })();

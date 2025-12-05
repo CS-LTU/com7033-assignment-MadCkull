@@ -93,11 +93,12 @@ body {
 .input-icon input,
 .input-icon select {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   padding-left: 2.75rem;
-  background: var(--bg-app);
+  font-size: 17px;
+  background: var(--bg-primary);
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   transition: var(--transition-normal);
   outline: none;
 }
@@ -114,15 +115,6 @@ body {
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
 }
-
-/* Toast Notifications */
-.custom-toast {
-  border-radius: var(--radius-md) !important;
-  bottom: 2rem !important; /* replaced var(--spacing-lg) */
-  right: 2rem !important; /* replaced var(--spacing-lg) */
-}
-
-/* lol */
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
@@ -157,30 +149,12 @@ body {
   min-height: calc(100vh - 4rem);
 }
 
-/* Toast Notifications */
-.custom-toast {
-  position: fixed;
-  bottom: 2rem !important;
-  right: 2rem !important;
-  border-radius: var(--radius-md) !important;
-  padding: 1rem 1.5rem !important; /* spacing-md spacing-lg replacement */
-  background: var(--color-primary) !important;
+/* Selection Dropdown */
+.Select-Input {
+  color: var(--text-main);
 }
 
-.toastify {
-    padding: 12px 20px;
-    color: var(--text-main);
-    display: inline-block;
-    box-shadow:var(--shadow-sm);
-    background: var(--bg-app);
-    /* background: linear-gradient(135deg, #73a5ff, #5477f5); */
-    position: fixed;
-    opacity: 0;
-    transition: all .4s 
-    cubic-bezier(.215, .61, .355, 1);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    text-decoration: none;
-    max-width: calc(50% - 20px);
-    z-index: 2147483647;
+.Select-Input option {
+  background-color: var(--bg-primary) !important; /* may work inconsistently */
+  color: var(--text-main) !important;
 }

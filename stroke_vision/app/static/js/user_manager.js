@@ -7,6 +7,7 @@
     UPDATE_ROLE: "/admin/api/users/update-role",
     RESET_PASSWORD: "/admin/api/users/reset-password/",
     DELETE_USER: "/admin/api/users/delete/",
+    UNLOCK_USER: "/admin/api/users/unlock",
     SELF_UPDATE_EMAIL: "/admin/api/self/update-email",
     SELF_RESET_PASSWORD: "/admin/api/self/reset-password",
   };
@@ -97,9 +98,8 @@
           if (help)
             help.innerText = err && err.message ? err.message : "Action failed";
           else
-            window.showToast(
-              err && err.message ? err.message : "Action failed",
-              "danger"
+            window.notify.error(
+              err && err.message ? err.message : "Action failed"
             );
         });
     };
@@ -162,14 +162,6 @@
       button.disabled = true;
       button.innerHTML = '<span class="material-icons spin">refresh</span>';
 
-      if (
-        !confirm(
-          "Are you sure you want to reset your own password? A temporary password will be set."
-        )
-      ) {
-        return;
-      }
-
       const result = await performApiAction(
         API.SELF_RESET_PASSWORD,
         {},
@@ -186,19 +178,17 @@
           if (displayEl) displayEl.innerText = pwd;
           const pm = document.getElementById("passwordModal");
           if (pm) pm.classList.remove("hidden");
-          else window.showToast("Password: " + pwd, "success");
+          else window.notify.success("Password: " + pwd);
         } else {
-          window.showToast(
-            result.message || "Password reset successfully.",
-            "success"
+          window.notify.success(
+            result.message || "Password reset successfully."
           );
         }
       }
     } catch (err) {
       console.error("Admin self-update failed:", err);
-      window.showToast(
-        "An unexpected error occurred: " + (err.message || err),
-        "danger"
+      window.notify.error(
+        err.message || err
       );
     } finally {
       button.disabled = false;
@@ -247,14 +237,7 @@
         }
       );
     } else if (action === "reset_password") {
-      if (
-        !confirm(
-          `Are you sure you want to reset the password for ${targetUser.name}? This action cannot be undone.`
-        )
-      )
-        return;
-
-      window.showToast("Generating new password...", "info");
+      window.notify.info("Generating new password...");
 
       performApiAction(
         API.RESET_PASSWORD + userId,
@@ -274,9 +257,8 @@
                 .getElementById("passwordModal")
                 .classList.remove("hidden");
             } else {
-              window.showToast(
-                result.message || "Password reset successfully.",
-                "success"
+              window.notify.success(
+                result.message || "Password reset successfully."
               );
             }
           }
@@ -285,12 +267,6 @@
           console.error("Reset password error:", err);
         });
     } else if (action === "delete") {
-      if (
-        !confirm(
-            `Are you sure you want to PERMANENTLY delete user ${targetUser.name}? This action cannot be undone.`
-        )
-      )
-        return;
 
       await performApiAction(
         API.DELETE_USER + userId,
@@ -298,6 +274,16 @@
         "DELETE",
         `User ${targetUser.name} deleted successfully.`,
         "Failed to delete user."
+      );
+      await loadUserList();
+    } else if (action === "unlock") {
+
+      await performApiAction(
+        API.UNLOCK_USER,
+        { user_id: userId },
+        "PATCH",
+        `User ${targetUser.name} unlocked.`,
+        "Failed to unlock user."
       );
       await loadUserList();
     }
@@ -320,17 +306,17 @@
       });
 
       if (result && result.success) {
-        if (successMessage) window.showToast(successMessage, "success");
+        if (successMessage) window.notify.success(successMessage);
         return result;
       } else {
         const msg =
           (result && result.message) || errorMessage || "Action failed";
-        window.showToast(msg, "danger");
+        window.notify.error(msg);
         return result || null;
       }
     } catch (error) {
       console.error("API Action Error:", error);
-      window.showToast(errorMessage || "Action failed", "danger");
+      window.notify.error(errorMessage || "Action failed");
       throw error;
     }
   }
@@ -423,6 +409,20 @@
   function renderUserRow(user) {
     const userId = user.id;
     const currentRole = user.role;
+    const isLocked = user.is_locked;
+    
+    // Lock badge
+    const lockBadge = isLocked 
+      ? `<span class="role-badge" style="background-color: #dc3545; color: white; margin-left: 8px;">Locked</span>` 
+      : "";
+      
+    // Unlock button
+    const unlockBtn = isLocked
+      ? `<button class="btn-action" title="Unlock User" onclick="window.handleUserAction('unlock', ${userId})">
+           <span class="material-icons" style="color: #28a745;">lock_open</span>
+         </button>`
+      : "";
+
     return `
       <div class="user-list-row" data-user-id="${userId}">
         <div class="user-info">
@@ -431,8 +431,10 @@
         </div>
         <div class="user-role">
           <span class="role-badge">${currentRole}</span>
+          ${lockBadge}
         </div>
         <div class="user-actions">
+          ${unlockBtn}
           <button class="btn-action" title="Update Email" onclick="window.handleUserAction('email', ${userId})">
             <span class="material-icons">edit</span>
           </button>
@@ -453,7 +455,7 @@
   function copyPassword() {
     const textEl = document.getElementById("newPasswordDisplay");
     if (!textEl) {
-      window.showToast("No password to copy.", "danger");
+      window.notify.error("No password to copy.");
       return;
     }
     const text = textEl.innerText || textEl.textContent;
@@ -463,9 +465,9 @@
     tempInput.select();
     try {
       document.execCommand("copy");
-      window.showToast("Password copied to clipboard!", "success");
+      window.notify.success("Password copied to clipboard!");
     } catch (err) {
-      window.showToast("Could not copy password.", "danger");
+      window.notify.error("Could not copy password.");
     }
     document.body.removeChild(tempInput);
   }

@@ -17,7 +17,7 @@
             <label for="name">Name</label>
             <div class="input-icon">
                 <span class="material-icons">person</span>
-                <input type="text" id="name" name="name" autocomplete="name" value="{{ form.name.data }}" required />
+                <input type="text" id="name" name="name" autocomplete="name" value="{{ form.name.data or '' }}" required />
             </div>
         </div>
 
@@ -25,7 +25,7 @@
             <label for="email">Email</label>
             <div class="input-icon">
                 <span class="material-icons">email</span>
-                <input type="email" id="email" name="email" autocomplete="email" value="{{ form.email.data }}" required />
+                <input type="email" id="email" name="email" autocomplete="email" value="{{ form.email.data or '' }}" required />
             </div>
         </div>
 
@@ -41,11 +41,19 @@
             <label for="role">Role</label>
             <div class="input-icon">
                 <span class="material-icons">badge</span>
-                <select id="role" name="role" required>
+                <select class="Select-Input" id="role" name="role" required onchange="toggleAdminCode()">
                     {% for value, label in form.role.choices %}
                         <option value="{{ value }}" {% if form.role.data == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
+            </div>
+        </div>
+
+        <div class="form-group" id="adminCodeContainer" style="display: none;">
+            <label for="admin_code">Admin Invite Code</label>
+            <div class="input-icon">
+                <span class="material-icons">vpn_key</span>
+                <input type="text" id="admin_code" name="admin_code" value="{{ form.admin_code.data or '' }}" placeholder="Enter invite code" />
             </div>
         </div>
 
@@ -59,4 +67,23 @@
     </p>
   </div>
 </div>
+
+<script>
+    function toggleAdminCode() {
+        const roleSelect = document.getElementById("role");
+        const adminContainer = document.getElementById("adminCodeContainer");
+        const adminInput = document.getElementById("admin_code");
+        
+        if (roleSelect.value === "Admin") {
+            adminContainer.style.display = "flex";
+            adminInput.required = true;
+        } else {
+            adminContainer.style.display = "none";
+            adminInput.required = false;
+        }
+    }
+
+    // Run on load to set initial state (e.g. if form validation failed and Admin was selected)
+    document.addEventListener("DOMContentLoaded", toggleAdminCode);
+</script>
 {% endblock %}

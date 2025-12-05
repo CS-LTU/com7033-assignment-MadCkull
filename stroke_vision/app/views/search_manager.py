@@ -1,10 +1,9 @@
-# app/views/search_manager.py
 import re
 import logging
-from datetime import datetime
 
 from flask import Blueprint, request, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
+from flask_login import login_required, current_user
 from mongoengine.errors import DoesNotExist, ValidationError as MongoValidationError
 
 # Adjust import according to your project structure
@@ -37,33 +36,6 @@ except Exception as ex:
     logger.warning("Could not ensure indexes on patients collection: %s", ex)
 
 
-def _serialize_date(dt):
-    """Return ISO formatted string for datetimes, or None."""
-    if dt is None:
-        return None
-    if isinstance(dt, datetime):
-        # Keep ISO format; leave timezone handling to database / front-end
-        return dt.isoformat()
-    return dt
-
-
-def _patient_full_doc(p):
-    """Return full patient document as JSON-serializable dict."""
-    # Convert fields carefully to native types
-    doc = p.to_mongo().to_dict()
-    # Remove MongoDB internal _id => convert to string
-    _id = doc.pop("_id", None)
-    if _id is not None:
-        doc["_id"] = str(_id)
-    # Turn datetimes to ISO strings
-    if "record_entry_date" in doc and doc["record_entry_date"] is not None:
-        doc["record_entry_date"] = _serialize_date(doc["record_entry_date"])
-    # ensure numeric types are safe
-    if "stroke_risk" in doc and doc["stroke_risk"] is not None:
-        doc["stroke_risk"] = float(doc["stroke_risk"])
-    return doc
-
-
 # Utility validators
 _RE_ALPHA_SPACE = re.compile(r"^[A-Za-z ]+$")
 _RE_DIGITS = re.compile(r"^\d+$")
@@ -88,7 +60,18 @@ def suggestions():
     Response:
       { items: [ {patient_id, name, ...}, ... ], page, limit, has_more }
     """
+    if current_user.role == "Admin":
+        return jsonify({"items": [], "page": 1, "limit": 30, "has_more": False})
+
     q = (request.args.get("q") or "").strip()
+    
+    # RBAC: Nurses can ONLY search by ID (min 9 digits).
+    if current_user.role == "Nurse":
+        # If query is not a valid 9-digit ID, return empty immediately.
+        # This effectively hides all results unless they type a full ID.
+        if not q.isdigit() or len(q) < 9:
+             return jsonify({"items": [], "page": 1, "limit": 30, "has_more": False})
+
     page = max(1, int(request.args.get("page") or 1))
     limit = min(
         MAX_SUGGEST_LIMIT,
@@ -167,151 +150,3 @@ def suggestions():
                 "error": "server_error",
             }
         ), 500
-
-
-@search_bp.route("/list", methods=["GET"])
-@login_required
-def list_patients():
-    """
-    Paginated patient list used by the 'Show Patient List' component.
-    Query params:
-      - page: int (default 1)
-      - limit: int (default 28)
-    Response:
-      { items: [ {patient_id, name, gender, stroke_risk, record_entry_date}, ... ],
-        page, limit, has_more }
-    """
-    page = max(1, int(request.args.get("page") or 1))
-    limit = min(
-        MAX_LIST_LIMIT, max(1, int(request.args.get("limit") or DEFAULT_LIST_LIMIT))
-    )
-    skip = (page - 1) * limit
-
-    try:
-        items = []
-        # projection to fetch only required fields (faster)
-        cursor = (
-            Patient._get_collection()
-            .find(
-                {},
-                {
-                    "patient_id": 1,
-                    "name": 1,
-                    "gender": 1,
-                    "stroke_risk": 1,
-                    "record_entry_date": 1,
-                },
-            )
-            .sort("record_entry_date", -1)
-            .skip(skip)
-            .limit(limit)
-        )
-
-        for doc in cursor:
-            items.append(
-                {
-                    "patient_id": doc.get("patient_id"),
-                    "name": doc.get("name"),
-                    "gender": doc.get("gender"),
-                    "stroke_risk": float(doc.get("stroke_risk") or 0),
-                    "record_entry_date": _serialize_date(doc.get("record_entry_date")),
-                }
-            )
-
-        has_more = len(items) == limit
-
-        # Log the action: doctor/admin requested a patient list
-        try:
-            log_activity(
-                f"Requested patient list (page={page}, limit={limit}, returned={len(items)})",
-                level=1,
-            )
-        except Exception:
-            # Logging must not break normal flow; keep the endpoint robust.
-            logger.exception("Failed to write activity log for patient list request")
-
-        return jsonify(
-            {"items": items, "page": page, "limit": limit, "has_more": has_more}
-        )
-
-    except Exception as ex:
-        logger.exception("Error listing patients: %s", ex)
-        # Also record as activity log (higher severity)
-        try:
-            log_activity(
-                f"Error listing patients (page={page}, limit={limit}): {ex}", level=4
-            )
-        except Exception:
-            logger.exception("Failed to write activity log for patient list error")
-
-        return jsonify(
-            {
-                "items": [],
-                "page": page,
-                "limit": limit,
-                "has_more": False,
-                "error": "server_error",
-            }
-        ), 500
-
-
-@search_bp.route("/<string:patient_id>", methods=["GET"])
-@login_required
-def get_patient(patient_id):
-    """
-    Full patient detail endpoint. patient_id must be 9 digits.
-    """
-    if not _RE_DIGITS.fullmatch(patient_id) or len(patient_id) != 9:
-        # validation failure: log at a higher (visible) level
-        try:
-            log_activity(
-                f"Attempted fetch with invalid patient_id: {patient_id}", level=3
-            )
-        except Exception:
-            logger.exception(
-                "Failed to write activity log for invalid patient_id request"
-            )
-
-        return jsonify(
-            {
-                "error": "invalid_patient_id",
-                "message": "patient_id must be exactly 9 digits",
-            }
-        ), 400
-
-    try:
-        p = Patient.objects.get(patient_id=patient_id)
-
-        # Log viewing of a patient record (sufficient detail to identify the patient)
-        try:
-            log_activity(f"Viewed patient {patient_id}", level=1)
-        except Exception:
-            logger.exception("Failed to write activity log for patient view")
-
-        return jsonify(_patient_full_doc(p))
-    except DoesNotExist:
-        # Not found: useful to log so doctors/admin can audit suspicious missing-access attempts
-        try:
-            log_activity(f"Patient not found: {patient_id}", level=2)
-        except Exception:
-            logger.exception("Failed to write activity log for patient not found")
-
-        return jsonify({"error": "not_found"}), 404
-    except MongoValidationError as mv:
-        logger.exception("Validation error fetching patient %s: %s", patient_id, mv)
-        try:
-            log_activity(
-                f"Validation error fetching patient {patient_id}: {mv}", level=3
-            )
-        except Exception:
-            logger.exception(
-                "Failed to write activity log for patient validation error"
-            )
-        return jsonify({"error": "invalid_request"}), 400
-    except Exception as ex:
-        logger.exception("Error fetching patient %s: %s", patient_id, ex)
-        try:
-            log_activity(f"Server error fetching patient {patient_id}: {ex}", level=4)
-        except Exception:
-            logger.exception("Failed to write activity log for patient server error")
-        return jsonify({"error": "server_error"}), 500

@@ -1,5 +1,5 @@
 # views/patient_manager.py
-from flask import Blueprint, render_template, url_for, request, jsonify, flash, redirect
+from flask import Blueprint, abort, render_template, url_for, request, jsonify, flash, redirect
 from app.forms.patient_form import PatientForm
 from app.models.patient import Patient
 from app.utils.prediction import StrokePredictor
@@ -121,6 +121,9 @@ def api_patient_data():
         log_security("Unauthorized API data access attempt.", level=3)
         return jsonify({"error": "Unauthorized access to data API"}), 403
 
+    if current_user.role not in ["Doctor"]:
+        abort(403)
+
     try:
         page = request.args.get("page", 1, type=int)
         limit = 20
@@ -134,6 +137,9 @@ def api_patient_data():
         log_activity(
             f"Accessed patient list via API (page={page}, limit={limit}).", level=1
         )
+
+        import time
+        time.sleep(1.2)  # Artificial delay for loading animation
 
         patient_list = []
         for patient in patients:
@@ -175,6 +181,9 @@ def api_patient_data():
 @login_required
 def api_patient_list_view():
     """Renders the HTML container for the Patient List view."""
+    if current_user.role != "Doctor":
+        abort(403)
+
     if not is_ajax_request():
         log_security("Unauthorized access to patient list view endpoint.", level=3)
         return jsonify({"error": "Unauthorized access to API view"}), 403
@@ -188,13 +197,16 @@ def api_details_patient_view(patient_id):
     """
     Fetches patient data and renders the HTML fragment for the details view.
     """
+    if current_user.role == "Admin":
+        abort(403)
+
     patient = Patient.objects(patient_id=patient_id).first()
 
     if not patient:
         log_activity(f"Patient details requested but not found: {patient_id}", level=2)
         return jsonify({"error": "Patient not found"}), 404
 
-    log_activity(f"Viewed patient details: {patient_id}", level=1)
+    log_activity(f"Viewed patient {patient_id}", level=1)
 
     risk_level_str = patient.risk_level if hasattr(patient, "risk_level") else "Low"
     risk_class_str = get_risk_class(risk_level_str)
@@ -232,6 +244,10 @@ def api_details_patient_view(patient_id):
 @login_required
 def patient_form(patient_id):
     """Handles both adding a new patient and editing an existing one."""
+    if current_user.role == "Admin":
+        log_security(f"Unauthorized attempt to access patient form.", level=2)
+        abort(403)
+    
     patient = None
 
     # Handle GET Request
@@ -341,12 +357,12 @@ def patient_form(patient_id):
 
             if is_edit:
                 log_activity(
-                    f"Updated patient record: {patient.patient_id} (risk={risk_percent}, level={risk_level})",
+                    f"Updated patient {patient.patient_id} (Risk: {risk_level})",
                     level=1,
                 )
             else:
                 log_activity(
-                    f"Added new patient record: {patient.patient_id} (risk={risk_percent}, level={risk_level})",
+                    f"Added paetient {patient.patient_id} (Risk: {risk_level})",
                     level=1,
                 )
 
@@ -354,7 +370,7 @@ def patient_form(patient_id):
             return jsonify(
                 {
                     "success": True,
-                    "message": f"Patient record successfully {action}.",
+                    "message": f"Patient record {action}.",
                     "patient_id": patient.patient_id,
                     "risk": risk_percent,
                     "risk_level": risk_level,
@@ -369,7 +385,7 @@ def patient_form(patient_id):
             return jsonify(
                 {
                     "success": False,
-                    "message": f"Server error processing patient data: {str(e)}",
+                    "message": "Server error processing patient data.",
                 }
             ), 500
 
@@ -380,6 +396,8 @@ def patient_form(patient_id):
 @patient_bp.route("/predict", methods=["POST"])
 @login_required
 def predict_risk():
+    if current_user.role == "Admin":
+        return jsonify({"success": False, "message": "Admins cannot perform predictions."}), 403
     try:
         form_age = request.form.get("age")
         form_gender = request.form.get("gender")
@@ -461,7 +479,7 @@ def predict_risk():
                 response_patient = patient
 
                 log_activity(
-                    f"Updated patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
+                    f"Updated patient {response_patient.patient_id} (Risk: {risk_level})",
                     level=1,
                 )
             else:
@@ -488,7 +506,7 @@ def predict_risk():
                 response_patient = new_patient
 
                 log_activity(
-                    f"Created patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
+                    f"Created patient {response_patient.patient_id} (Risk: {risk_level})",
                     level=1,
                 )
 
@@ -498,7 +516,7 @@ def predict_risk():
                 "name": response_patient.name,
                 "risk": risk_percentage,
                 "risk_level": risk_level,
-                "message": "Patient data saved successfully",
+                "message": "Patient data saved.",
             }
 
             return (
@@ -514,7 +532,7 @@ def predict_risk():
             return jsonify(
                 {
                     "success": False,
-                    "message": f"Error saving/updating patient data: {str(e)}",
+                    "message": "Error saving patient data.",
                 }
             ), 500
 
@@ -523,7 +541,7 @@ def predict_risk():
         print(traceback.format_exc())
         log_activity(f"Unexpected error in predict_risk: {str(e)}", level=4)
         return jsonify(
-            {"success": False, "message": f"An unexpected error occurred: {str(e)}"}
+            {"success": False, "message": "An unexpected server error occurred."}
         ), 500
 
 
@@ -539,7 +557,7 @@ def delete_patient(patient_id):
             return jsonify(
                 {
                     "success": False,
-                    "message": "You Don't Have Permission to Delete This Patient",
+                    "message": "Only Doctors can delete patients.",
                 }
             ), 403
 
@@ -556,9 +574,9 @@ def delete_patient(patient_id):
 
         return jsonify(
             {
-                "success": True,
-                "message": "Patient record deleted successfully",
-                "redirect": url_for("home"),
+                 "success": True,
+                 "message": "Patient record deleted.",
+                 "redirect": url_for("home"),
             }
         ), 200
 
@@ -566,7 +584,7 @@ def delete_patient(patient_id):
         print(f"Error deleting patient: {str(e)}")
         log_security(f"Error deleting patient {patient_id}: {str(e)}", level=4)
         return jsonify(
-            {"success": False, "message": f"Error deleting patient: {str(e)}"}
+            {"success": False, "message": "Error deleting patient."}
         ), 500
 
 

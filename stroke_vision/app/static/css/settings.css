@@ -191,12 +191,12 @@
 }
 
 .btn-action.save {
-  background: var(--color-primary);
+  background: var(--bg-button);
   color: white;
 }
 
 .btn-action.save:hover {
-  background: var(--color-primary-hover);
+  background: var(--bg-button-hover);
   transform: translateY(-1px);
 }
 

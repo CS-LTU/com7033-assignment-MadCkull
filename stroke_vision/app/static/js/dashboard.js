@@ -101,6 +101,22 @@
         riskVal > 25 ? "#EE5D50" : riskVal > 15 ? "#FFB547" : "#05CD99";
       let initial = p.name.charAt(0);
 
+      let conditionsHtml;
+      if (p.conditions === "None") {
+        conditionsHtml = `<span class="condition-badge condition-none">None</span>`;
+      } else {
+        const individualConditions = p.conditions.split(', ');
+        conditionsHtml = individualConditions.map(condition => {
+          let specificClass = "";
+          if (condition === "Hypertension") {
+            specificClass = "condition-hypertension";
+          } else if (condition === "Heart Disease") {
+            specificClass = "condition-heart-disease";
+          }
+          return `<span class="condition-badge ${specificClass}">${condition}</span>`;
+        }).join('');
+      }
+
       const row = `
         <tr>
           <td style="display:flex; align-items:center; gap:10px;">
@@ -108,7 +124,9 @@
             ${p.name}
           </td>
           <td>${p.age} / ${p.gender}</td>
-          <td>${p.conditions}</td>
+
+          <td>${conditionsHtml}</td>
+          
           <td>${p.avg_glucose_level}</td>
           <td>
             <div class="risk-progress-bg"><div class="risk-progress-fill" style="width:${Math.min(

@@ -56,7 +56,14 @@
       if (window.handleViewNavigation) {
         window.handleViewNavigation(ev, "details", item.patient_id);
       }
+      
+      // Clear immediately on selection
+      if (typeof searchInput !== "undefined") {
+         searchInput.value = "";
+         if(window.changePlaceholder) window.changePlaceholder("Search");
+      }
       resultsContainer.innerHTML = "";
+      if (spotlightContainer) spotlightContainer.classList.remove("typing-active");
     });
     return el;
   }
@@ -203,5 +210,36 @@
         resultsContainer.innerHTML = "";
       }
     });
+    // --- Helper to reset search UI ---
+    function resetUI() {
+      searchInput.value = "";
+      resultsContainer.innerHTML = "";
+      spotlightContainer.classList.remove("typing-active");
+      spotlightContainer.classList.remove("hover-active");
+      if (window.changePlaceholder) window.changePlaceholder("Search");
+    }
+
+    // --- Observer to clear input when search bar reappears ---
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "class"
+        ) {
+          // If 'view-active' is REMOVED, it means search bar is reappearing
+          if (!searchContainer.classList.contains("view-active")) {
+            resetUI();
+          }
+        }
+      });
+    });
+
+    observer.observe(searchContainer, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    // Modified click handler is handled in createSuggestionElement below logic...
+    // referencing the inner selection logic from lines 54-60
   });
 })(); // End of IIFE

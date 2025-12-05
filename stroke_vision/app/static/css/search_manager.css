@@ -71,8 +71,7 @@
   position: relative;
   z-index: 20;
   overflow: hidden;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 
   width: 100%;
   max-width: 600px;
@@ -106,7 +105,7 @@
 }
 
 .search-icon {
-  color: black;
+  color: var(--text-main);
   width: 24px;
   height: 24px;
   flex-shrink: 0;
@@ -190,8 +189,7 @@ input {
 }
 
 .shortcut-btn:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   opacity: 1 !important;
 }
 
@@ -199,7 +197,7 @@ input {
   width: 28px;
   height: 28px;
   stroke-width: 1.4;
-  color: black;
+  color: var(--text-main);
   opacity: 0.3;
   transition: opacity 0.2s;
   z-index: 1 !important;
@@ -225,7 +223,7 @@ input {
 }
 
 .results-container {
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid var(--border-light);
   background: var(--bg-secondary);
   width: 100%;
   display: none;
@@ -234,6 +232,27 @@ input {
   max-height: 384px;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+/* Minimal Scrollbar for Results */
+.results-container::-webkit-scrollbar {
+  width: 9px;
+  background: transparent;
+}
+
+.results-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.results-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.results-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .gooey-container.typing-active .results-container {
@@ -263,8 +282,8 @@ input {
 }
 
 .result-item:hover {
-  background: white;
-  box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
 }
 .result-icon-box {
   width: 32px;
@@ -278,7 +297,7 @@ input {
   width: 24px;
   height: 24px;
   stroke-width: 1.5;
-  color: black;
+  color: var(--text-main);
 }
 .result-text {
   flex: 1;
@@ -287,7 +306,7 @@ input {
 .result-label {
   font-weight: 500;
   font-size: 16px;
-  color: black;
+  color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

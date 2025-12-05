@@ -42,30 +42,6 @@
     return resp.json();
   }
 
-  function showToast(message, type = "info") {
-    if (typeof Toastify !== "undefined") {
-      const classes = {
-        success: "bg-success",
-        danger: "bg-danger",
-        warning: "bg-warning",
-        info: "bg-info",
-      };
-      Toastify({
-        text: message,
-        duration: 3000,
-        close: true,
-        gravity: "bottom",         // bottom (not top)
-        position: "right",         // right side
-        stopOnFocus: true, // Prevents dismissal on focus
-        style: {
-          background: classes[type] || classes.info,
-        },
-      }).showToast();
-    } else {
-      console.warn(`Toastify not loaded: ${message}`);
-    }
-  }
-
 // This function handles the placeholder text animation (used by search_manager and router)
   function changePlaceholder(text) {
     const placeholder = document.getElementById("placeholder");
@@ -118,14 +94,9 @@
   window.changePlaceholder = changePlaceholder;
   window.getRiskLevel = getRiskLevel;
   window.formatDate = formatDate;
-  window.showToast = showToast;
+
 
   window.addEventListener("DOMContentLoaded", () => {
-    if (window.FLASH_NOTIFICATIONS && window.FLASH_NOTIFICATIONS.length > 0) {
-      window.FLASH_NOTIFICATIONS.forEach(([category, message]) => {
-        showToast(message, category);
-      });
-      window.FLASH_NOTIFICATIONS = [];
-    }
+
   });
 })(); // End of IIFE

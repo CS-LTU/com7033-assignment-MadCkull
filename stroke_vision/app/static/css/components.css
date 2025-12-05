@@ -1,0 +1,191 @@
+/* =======================================================
+ * components.css
+ * Centralized components for Inputs, Buttons, Icons, etc.
+ * ======================================================= */
+
+/* --- INPUTS & SELECTS --- */
+/* Unifying .modern-input (patient_form, user_manager), .form-control (potentially used elsewhere) */
+.input,
+.modern-input,
+.modern-select,
+.form-control {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);  /* Standardizing on radius-sm (usually 8px) */
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  appearance: none; /* Normalize select appearance */
+}
+
+.input:focus,
+.modern-input:focus,
+.modern-select:focus,
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+.input:disabled,
+.modern-input:disabled {
+  background: var(--bg-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Input Wrapper/Group standard */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.input-label,
+.input-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* --- BUTTONS --- */
+/* Base Button Style */
+.btn,
+.btn-submit,
+.btn-cancel,
+.btn-action,
+.submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: var(--radius-lg); /* Standardizing on larger radius for buttons */
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  gap: 8px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.btn:active,
+.btn-submit:active,
+.btn-cancel:active,
+.btn-action:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled,
+.btn-submit:disabled,
+.btn-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Primary Button (.btn-primary, .btn-submit, .btn-action default) */
+.btn-primary,
+.btn-submit,
+.btn-action {
+  background: var(--bg-button);       /* Uses color scheme variable */
+  color: var(--text-main);            /* Usually white components */
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+/* Ensure basic .btn-action gets primary color if not overridden */
+.btn-action {
+    background: var(--color-primary); 
+    color: #fff;
+    border: 1px solid var(--color-primary);
+}
+
+.btn-primary:hover,
+.btn-submit:hover,
+.btn-action:hover {
+  background: var(--bg-button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-action:hover {
+    background: var(--color-primary-hover);
+}
+
+
+/* Secondary/Cancel Button */
+.btn-secondary,
+.btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid transparent; /* or var(--border-medium) if preferred */
+}
+
+.btn-secondary:hover,
+.btn-cancel:hover {
+  background: var(--border-light); /* Slightly darker than bg-secondary */
+}
+
+/* Danger Button */
+.btn-danger,
+.btn-action.btn-danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border-color: var(--status-danger-text);
+}
+
+.btn-danger:hover,
+.btn-action.btn-danger:hover {
+  background: var(--status-danger-bg);
+  opacity: 0.9;
+}
+
+/* --- ICON BUTTONS --- */
+/* Icon Only Buttons (.icon-btn, .shortcut-btn) */
+.icon-btn,
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-full); /* Round by default for icons */
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover,
+.btn-icon:hover {
+  background: var(--bg-button-hover);
+  transform: scale(1.05);
+}
+
+.icon-btn.danger:hover {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+}
+
+/* --- ICONS / MISC --- */
+/* Standard Icon Box (used in headers) */
+.icon-box,
+.hero-icon-box {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-button);
+  border-radius: var(--radius-lg);
+  color: var(--text-main);
+}

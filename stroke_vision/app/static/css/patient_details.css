@@ -227,20 +227,21 @@
 }
 
 .btn-action.edit {
-  background: var(--bg-card);
+  background: var(--bg-button);
   color: var(--text-secondary);
 }
 .btn-action.edit:hover {
-  background: var(--bg-overlay);
+  background: var(--bg-button-hover);
   transform: translateY(-1px);
 }
 
 .btn-action.delete {
-  background: var(--bg-card);
+  background: var(--bg-button);
   color: var(--text-secondary);
 }
 .btn-action.delete:hover {
-  background: var(--bg-overlay);
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
   transform: translateY(-1px);
 }
 

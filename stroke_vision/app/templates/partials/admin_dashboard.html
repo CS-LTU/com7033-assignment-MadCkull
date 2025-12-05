@@ -1,0 +1,74 @@
+<!-- partials/admin_dashboard.html -->
+<div id="adminDashboardRoot" class="admin-dash-container">
+    <div class="dash-kpi-grid">
+        <!-- Total Users -->
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i data-lucide="users" width="20" height="20"></i>
+            </div>
+            <div class="kpi-value" id="kpiTotalUsers">-</div>
+            <div class="kpi-label">Total Users</div>
+        </div>
+
+        <!-- Doctors -->
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i data-lucide="stethoscope" width="20" height="20"></i>
+            </div>
+            <div class="kpi-value" id="kpiDoctors">-</div>
+            <div class="kpi-label">Doctors</div>
+        </div>
+
+        <!-- Nurses -->
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i data-lucide="activity" width="20" height="20"></i>
+            </div>
+            <div class="kpi-value" id="kpiNurses">-</div>
+            <div class="kpi-label">Nurses</div>
+        </div>
+
+         <!-- Locked Accounts -->
+         <div class="kpi-card">
+            <div class="kpi-icon" style="color: var(--status-danger-text); background: var(--status-danger-bg);">
+                <i data-lucide="lock" width="20" height="20"></i>
+            </div>
+            <div class="kpi-value" id="kpiLocked" style="color: var(--status-danger-text);">-</div>
+            <div class="kpi-label">Locked Accounts</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="dash-charts-grid">
+        <!-- Role Distribution -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">User Distribution</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="adminRoleChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Growth Trend -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Growth Trend (6 Months)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="adminGrowthChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize icons if lucide is available
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+    // Initialize dashboard logic
+    if (window.initAdminDashboard) {
+        window.initAdminDashboard();
+    }
+</script>

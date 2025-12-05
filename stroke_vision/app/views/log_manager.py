@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required
+from flask import Blueprint, render_template, jsonify, request, abort
+from flask_login import login_required, current_user
 from app.models.log import ActivityLog, SecurityLog
 
 log_manager_bp = Blueprint("log_manager", __name__, url_prefix="/logs")
@@ -9,6 +9,8 @@ log_manager_bp = Blueprint("log_manager", __name__, url_prefix="/logs")
 @login_required
 def view_activity():
     """Renders the Activity View (Security Logs)."""
+    if current_user.role != "Admin":
+        abort(403)
     return render_template("partials/toolbar/activity.html")
 
 
@@ -16,6 +18,8 @@ def view_activity():
 @login_required
 def view_changelog():
     """Renders the Change Log View (Activity Logs)."""
+    if current_user.role not in ["Admin", "Doctor"]:
+        abort(403)
     return render_template("partials/toolbar/change_log.html")
 
 
@@ -27,6 +31,9 @@ def get_activity_logs():
     Mapped to 'Activity' view in UI.
     """
     try:
+        if current_user.role != "Admin":
+            return jsonify({"error": "Admin privileges required."}), 403
+
         # Default sort by timestamp desc, limit 100 for performance
         logs = SecurityLog.objects.order_by("-timestamp").limit(100)
 
@@ -55,6 +62,9 @@ def get_change_logs():
     Mapped to 'Change Log' view in UI.
     """
     try:
+        if current_user.role not in ["Admin", "Doctor"]:
+            return jsonify({"error": "Access denied."}), 403
+
         # Default sort by timestamp desc, limit 100
         logs = ActivityLog.objects.order_by("-timestamp").limit(100)
 

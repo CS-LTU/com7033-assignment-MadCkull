@@ -1,6 +1,6 @@
 # app/views/dashboard.py
-from flask import Blueprint, render_template, jsonify
-from flask_login import login_required
+from flask import Blueprint, abort, render_template, jsonify
+from flask_login import login_required, current_user
 from app.models.patient import Patient
 from app.utils.log_utils import log_activity, log_security  # added logging imports
 
@@ -11,6 +11,8 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @login_required
 def view_dashboard():
     """Renders the dashboard HTML fragment."""
+    if current_user.role not in ["Admin", "Doctor"]:
+        abort(403)
     return render_template("toolbar/dashboard.html")
 
 
@@ -22,6 +24,9 @@ def get_dashboard_stats():
     Optimized for MongoDB/MongoEngine.
     """
     try:
+        if current_user.role not in ["Admin", "Doctor"]:
+            return jsonify({"success": False, "message": "Access denied."}), 403
+
         # 1. Fetch all patients (needed for comprehensive stats)
         # In a very large DB, you would use aggregate pipelines here instead of loading objects.
         patients = Patient.objects()

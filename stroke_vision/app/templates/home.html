@@ -7,8 +7,13 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/logs.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/admin_dashboard.css') }}"
+/>
 {% endblock %} {% block content %} {% if current_user.is_authenticated %}
 <div class="navBar-Container">{% include 'partials/navBar.html' %}</div>
+{% if current_user.role != 'Admin' %}
 <div class="AppLogoContainer">
   <img
     class="AppLogo"
@@ -16,9 +21,14 @@
     alt="StrokeVision Logo"
   />
 </div>
+{% endif %}
 
 <div class="Search-Manager-Container">
-  {% include 'partials/search_manager.html' %}
+  {% if current_user.role == 'Admin' %}
+      {% include 'partials/admin_dashboard.html' %}
+  {% else %}
+      {% include 'partials/search_manager.html' %}
+  {% endif %}
 </div>
 
 <div class="toolBar-Container">{% include 'partials/toolBar.html' %}</div>
@@ -42,4 +52,5 @@
 </div>
 {% endif %} {% endblock %} {% block extra_js %}
 <script src="{{ url_for('static', filename='js/logs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
 {% endblock %}

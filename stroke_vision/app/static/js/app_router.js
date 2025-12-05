@@ -2,17 +2,23 @@
 
 (function () {
   let appViewRoot;
-  let searchContainer;
+  let homeContainer; // Can be searchContainer OR adminDashboardRoot
 
   let previousView = null;
 
   function toggleViewActive(isActive) {
-    if (!searchContainer) return;
+    if (!homeContainer) {
+        // Try to re-fetch if lazy loaded or changed
+        homeContainer = document.getElementById("searchContainer") || document.getElementById("adminDashboardRoot");
+    }
+    
+    if (!homeContainer) return;
+    
     if (isActive) {
-      searchContainer.classList.add("view-active");
-      if (window.changePlaceholder) window.changePlaceholder("Back to Search");
+      homeContainer.classList.add("view-active");
+      if (window.changePlaceholder) window.changePlaceholder("Back to Home");
     } else {
-      searchContainer.classList.remove("view-active");
+      homeContainer.classList.remove("view-active");
       if (window.changePlaceholder) window.changePlaceholder("Search");
     }
   }
@@ -149,7 +155,7 @@
 
   window.addEventListener("DOMContentLoaded", () => {
     appViewRoot = document.getElementById("appViewRoot");
-    searchContainer = document.getElementById("searchContainer");
+    homeContainer = document.getElementById("searchContainer") || document.getElementById("adminDashboardRoot");
 
     window.addEventListener("hashchange", hashChangeHandler);
 

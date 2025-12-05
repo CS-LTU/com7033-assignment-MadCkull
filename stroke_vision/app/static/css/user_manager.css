@@ -103,43 +103,9 @@
   align-items: center;
 }
 
-/* Icon-only button */
-.icon-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 120ms, border-color 120ms, transform 120ms;
-  min-width: 40px;
-  height: 40px;
-}
+/* Icon-only button - Moved to components.css */
 
-.icon-btn .material-icons {
-  font-size: 20px;
-  color: var(--text-main); /* default icon color */
-}
-
-/* subtle hover */
-.icon-btn:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border-medium);
-  transform: translateY(-1px);
-}
-
-/* danger style for destructive action */
-.icon-btn.danger .material-icons {
-  color: var(--status-danger-text);
-}
-
-/* disabled state used while waiting for API */
-.icon-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* optional: if you want to keep the old bottom actions hidden */
 
 /* optional: if you want to keep the old bottom actions hidden */
 .profile-actions {
@@ -220,36 +186,9 @@
   justify-content: flex-end;
 }
 
-/* --- Base Button Styles (Unified) --- */
-.btn-action {
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s, border-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.btn-action:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-action.btn-danger {
-  background: var(--status-danger-bg);
-  border-color: var(--status-danger-text);
-  color: var(--status-danger-text);
-}
-.btn-action.btn-danger:hover {
-  background: var(--status-danger-bg);
-  border-color: var(--status-danger-text);
-}
+/* --- Base Button Styles (Unified in components.css) --- */
+/* NOTE: User Manager specific overrides like specific dimensions can stay if needed, 
+   but for now we rely on the component class */
 
 .user-actions .btn-action {
   width: 32px;
@@ -309,6 +248,8 @@
   width: 100%;
   max-width: 450px;
   box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
   animation: slideDown 0.3s ease-out;
 }
 
@@ -347,21 +288,7 @@
   justify-content: center;
 }
 
-.btn-cancel {
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-secondary);
-  color: var(--text-main);
-  font-weight: 500;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
-}
-
-.btn-cancel:hover {
-  background: var(--bg-secondary);
-}
+/* btn-cancel moved to components.css */
 
 /* Password Display Box */
 .password-display-box {
@@ -385,8 +312,8 @@
 }
 
 .btn-copy {
-  background: var(--color-primary);
-  color: white;
+  background: var(--bg-button);
+  color: var(--text-main);
   border: none;
   padding: 5px 10px;
   border-radius: 6px;
@@ -398,44 +325,14 @@
 }
 
 .btn-copy:hover {
-  background: var(--color-primary-hover);
+  background: var(--bg-button-hover);
 }
 
 .btn-copy .material-icons {
   font-size: 16px;
 }
 
-/* Input Group styles (reused from form.css principles) */
-.input-group {
-  margin-bottom: 15px;
-}
-
-.input-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.modern-input,
-.modern-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border-medium);
-  border-radius: 8px;
-  font-size: 14px;
-  box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.modern-input:focus,
-.modern-select:focus {
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
+/* Input Group Styles moved to components.css */
 .input-help {
   font-size: 11px;
   color: var(--text-secondary);

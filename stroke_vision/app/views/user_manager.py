@@ -55,7 +55,7 @@ def view_settings_panel():
     """Renders the settings HTML fragment for the current user."""
     # Log that user viewed their settings (info)
     try:
-        log_security("Viewed settings panel.", level=1)
+        log_security("Viewed settings.", level=1)
     except Exception:
         pass
 
@@ -72,7 +72,7 @@ def view_users_panel():
 
     # Log that admin opened the user management UI
     try:
-        log_security("Opened user management panel.", level=1)
+        log_security("Opened user manager.", level=1)
     except Exception:
         pass
 
@@ -143,18 +143,18 @@ def update_self_profile():
             extra = ""
             if "email" in changed_fields:
                 extra = f" Email changed from {old_email} -> {new_email}."
-            log_security(f"Updated profile. Fields changed: {details}.{extra}", level=1)
+            log_security(f"Updated profile details.{extra}", level=1)
         except Exception:
             pass
 
-        return jsonify({"success": True, "message": "Profile updated successfully."})
+        return jsonify({"success": True, "message": "Profile updated."})
     except Exception as e:
         db.session.rollback()
         try:
             log_security(f"Database error during profile update: {e}", level=3)
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 @user_manager_bp.route("/settings/api/change_password", methods=["PATCH"])
@@ -199,14 +199,14 @@ def change_self_password_api():
         except Exception:
             pass
 
-        return jsonify({"success": True, "message": "Password changed successfully."})
+        return jsonify({"success": True, "message": "Password changed."})
     except Exception as e:
         db.session.rollback()
         try:
             log_security(f"Database error during password change: {e}", level=3)
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 # =============================================================================
@@ -228,6 +228,7 @@ def get_users_api():
     users_data = []
     for u in users:
         created_at = u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A"
+        
         users_data.append(
             {
                 "id": u.id,
@@ -235,6 +236,7 @@ def get_users_api():
                 "email": u.email,
                 "role": u.role,
                 "created_at": created_at,
+                "is_locked": u.is_locked,
             }
         )
 
@@ -305,7 +307,7 @@ def update_user_email():
             )
         except Exception:
             pass
-        return jsonify({"success": True, "message": "User email updated."})
+        return jsonify({"success": True, "message": "Email updated."})
     except Exception as e:
         db.session.rollback()
         try:
@@ -314,7 +316,7 @@ def update_user_email():
             )
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 @user_manager_bp.route("/admin/api/users/update-role", methods=["PATCH"])
@@ -378,14 +380,47 @@ def update_user_role():
             )
         except Exception:
             pass
-        return jsonify({"success": True, "message": "User role updated."})
+        return jsonify({"success": True, "message": "Role updated."})
     except Exception as e:
         db.session.rollback()
         try:
             log_security(f"Database error on role update for {user_id}: {e}", level=3)
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
+
+
+@user_manager_bp.route("/admin/api/users/unlock", methods=["PATCH"])
+@login_required
+def unlock_user_api():
+    """Admin unlocks a locked user account (Admin only)."""
+    admin_check = ensure_admin()
+    if admin_check:
+        return admin_check
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"success": False, "message": "Missing user ID."}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"success": False, "message": "User not found."}), 404
+
+    try:
+        user.unlock()
+        # Logging
+        try:
+            log_security(f"Unlocked user {user.email}.", level=1)
+        except Exception:
+            pass
+            
+        return jsonify({"success": True, "message": f"User {user.name} unlocked."})
+    except Exception as e:
+        # unlock() commits internally, but if it failed:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 @user_manager_bp.route(
@@ -433,7 +468,7 @@ def reset_password_api(user_id):
             )
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 @user_manager_bp.route(
@@ -474,7 +509,7 @@ def delete_user_api(user_id):
 
         try:
             log_security(
-                f"Admin deleted user {user_name} ({user_email}) [ID: {user_id}].",
+                f"Deleted user {user_name} ({user_email}).",
                 level=0,
             )
         except Exception:
@@ -489,7 +524,7 @@ def delete_user_api(user_id):
             log_security(f"Database error on delete user {user_id}: {e}", level=3)
         except Exception:
             pass
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": "An unexpected server error occurred."}), 500
 
 
 # =============================================================================
