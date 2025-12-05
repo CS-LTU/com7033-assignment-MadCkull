@@ -18,15 +18,15 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-secondary); /* Keep transparency as overlay */
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(5px);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid #f0f0f0;
   height: 44px;
 
-  font-family: var(--font-family);
+  font-family: -apple-system, sans-serif;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #86868b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -34,29 +34,29 @@
 /* --- 3. Patient Rows --- */
 .patient-row {
   height: 56px; /* Fixed height for consistency */
-  border-bottom: 1px solid var(--bg-secondary);
+  border-bottom: 1px solid #f5f5f7;
   transition: background-color 0.15s ease;
   cursor: pointer; /* Whole row is clickable */
 }
 
 .patient-row:hover {
-  background-color: var(--bg-tertiary); /* Subtle hover */
+  background-color: #f5f9ff; /* Subtle blue tint on hover */
 }
 
 /* Row Typography */
 .patient-row span {
-  font-family: var(--font-family);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
-  color: var(--text-main);
+  color: #1d1d1f;
 }
 
 .patient-name {
   font-weight: 500;
-  color: var(--text-main);
+  color: #000;
 }
 .patient-id {
   font-family: "SF Mono", monospace;
-  color: var(--text-secondary);
+  color: #86868b;
   font-size: 12px;
 }
 
@@ -67,26 +67,26 @@
   justify-content: center;
   height: 22px;
   padding: 0 10px;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
 }
 
 .risk-low {
-  background: var(--status-success-bg);
-  color: var(--status-success-text);
+  background: #eafbf0;
+  color: #008a3e;
 }
 .risk-moderate {
-  background: var(--status-warning-bg);
-  color: var(--status-warning-text);
+  background: #fff8d6;
+  color: #9e7b00;
 }
 .risk-high {
-  background: var(--status-danger-bg);
-  color: var(--status-danger-text);
+  background: #fff0f0;
+  color: #d11a1a;
 }
 .risk-critical {
-  background: var(--status-critical-bg);
-  color: var(--status-critical-text);
+  background: #320000;
+  color: #ff6b6b;
 }
 
 /* --- 5. The Chevron (Replaces Open Button) --- */
@@ -94,7 +94,7 @@
   opacity: 0; /* Hidden by default */
   transform: translateX(-5px);
   transition: all 0.2s ease;
-  color: var(--color-primary);
+  color: #0071e3;
 }
 
 .patient-row:hover .row-chevron {
@@ -106,14 +106,14 @@
 .mac-state-message {
   padding: 60px;
   text-align: center;
-  color: var(--text-secondary);
+  color: #86868b;
   font-size: 13px;
 }
 .spinner-mac {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--border-medium);
-  border-top-color: var(--text-secondary);
+  border: 2px solid #e5e5e5;
+  border-top-color: #888;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 10px;

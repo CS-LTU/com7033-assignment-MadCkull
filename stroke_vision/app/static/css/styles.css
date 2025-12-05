@@ -7,9 +7,9 @@ body {
 
 /* Base Styles */
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-app);
-  color: var(--text-main);
+  font-family: "Inter", sans-serif;
+  background-color: var(--background);
+  color: var(--text);
   margin: 0;
   max-height: 100vh;
 
@@ -17,7 +17,8 @@ body {
 }
 
 /* Layout */
-/* .main-content removed (empty) */
+.main-content {
+}
 
 .centered-content {
   display: flex;
@@ -47,19 +48,19 @@ body {
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition: var(--transition);
   border: none;
   outline: none;
   text-decoration: none;
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--secondary);
 }
 
 .btn-block {
@@ -75,7 +76,7 @@ body {
 
 .form-group label {
   font-weight: 500;
-  color: var(--text-main);
+  color: var(--text);
 }
 
 .input-icon {
@@ -87,7 +88,7 @@ body {
 .input-icon .material-icons {
   position: absolute;
   left: var(--spacing-md);
-  color: var(--color-primary);
+  color: var(--icon);
 }
 
 .input-icon input,
@@ -95,17 +96,17 @@ body {
   width: 100%;
   padding: var(--spacing-md);
   padding-left: 2.75rem;
-  background: var(--bg-app);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  transition: var(--transition-normal);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
   outline: none;
 }
 
 .input-icon input:focus,
 .input-icon select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 2px 5px 9px -4px var(--shadow-sm);
+  border-color: var(--primary);
+  box-shadow: 2px 5px 9px -4px var(--shadow);
 }
 
 .form-actions {
@@ -117,9 +118,9 @@ body {
 
 /* Toast Notifications */
 .custom-toast {
-  border-radius: var(--radius-md) !important;
-  bottom: 2rem !important; /* replaced var(--spacing-lg) */
-  right: 2rem !important; /* replaced var(--spacing-lg) */
+  border-radius: var(--radius-lg) !important;
+  bottom: var(--spacing-lg) !important;
+  right: var(--spacing-lg) !important;
 }
 
 /* lol */
@@ -160,9 +161,9 @@ body {
 /* Toast Notifications */
 .custom-toast {
   position: fixed;
-  bottom: 2rem !important;
-  right: 2rem !important;
+  bottom: var(--spacing-lg) !important;
+  right: var(--spacing-lg) !important;
   border-radius: var(--radius-md) !important;
-  padding: 1rem 1.5rem !important; /* spacing-md spacing-lg replacement */
-  background: var(--color-primary) !important;
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+  background: var(--primary) !important;
 }

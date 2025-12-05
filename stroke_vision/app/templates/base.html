@@ -24,19 +24,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link
-      id="theme-stylesheet"
       rel="stylesheet"
       href="{{ url_for('static', filename='css/color_scheme.css') }}"
     />
-    <script>
-      (function() {
-        const savedTheme = localStorage.getItem("theme");
-        const themeLink = document.getElementById("theme-stylesheet");
-        if (savedTheme === "Dark" && themeLink) {
-          themeLink.href = themeLink.href.replace("color_scheme.css", "color_scheme-Dark.css");
-        }
-      })();
-    </script>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles.css') }}"

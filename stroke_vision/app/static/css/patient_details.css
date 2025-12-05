@@ -27,7 +27,7 @@
   align-items: center;
   margin-bottom: 40px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .hero-left {
@@ -51,10 +51,10 @@
 }
 
 .hero-name {
-  font-family: var(--font-family);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-main);
+  color: #1d1d1f;
   margin: 0 0 4px 0;
 }
 
@@ -63,12 +63,12 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #86868b;
   font-weight: 500;
 }
 
 .meta-badge {
-  background: var(--bg-secondary);
+  background: #f5f5f7;
   padding: 2px 8px;
   border-radius: 6px;
   font-family: "SF Mono", monospace;
@@ -87,20 +87,20 @@
 }
 
 .risk-badge-large.risk-low {
-  background: var(--status-success-bg);
-  color: var(--status-success-text);
+  background: #eafbf0;
+  color: #008a3e;
 }
 .risk-badge-large.risk-moderate {
-  background: var(--status-warning-bg);
-  color: var(--status-warning-text);
+  background: #fff8d6;
+  color: #9e7b00;
 }
 .risk-badge-large.risk-high {
-  background: var(--status-danger-bg);
-  color: var(--status-danger-text);
+  background: #fff0f0;
+  color: #d11a1a;
 }
 .risk-badge-large.risk-critical {
-  background: var(--status-critical-bg);
-  color: var(--status-critical-text);
+  background: #450a0a;
+  color: #ff8080;
 }
 
 /* --- 2. Grid Layout --- */
@@ -112,11 +112,11 @@
 }
 
 .detail-card {
-  background: var(--bg-card);
+  background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .card-header {
@@ -127,14 +127,14 @@
 }
 
 .card-icon {
-  color: var(--color-primary);
+  color: #0071e3;
   font-size: 20px;
 }
 .card-header h3 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-main);
+  color: #1d1d1f;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -154,7 +154,7 @@
 .vital-item label {
   font-size: 11px;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #86868b;
   font-weight: 600;
   margin-bottom: 4px;
 }
@@ -162,20 +162,20 @@
 .vital-value {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-main);
+  color: #1d1d1f;
 }
 
 .vital-status {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: #86868b;
   margin-top: 2px;
 }
 
 .status-text.text-danger {
-  color: var(--status-danger-text);
+  color: #d11a1a;
 }
 .status-text.text-success {
-  color: var(--status-success-text);
+  color: #008a3e;
 }
 
 /* --- Info List --- */
@@ -189,7 +189,7 @@
   display: flex;
   justify-content: space-between;
   padding-bottom: 8px;
-  border-bottom: 1px dashed var(--border-light);
+  border-bottom: 1px dashed #f0f0f0;
 }
 .info-row:last-child {
   border-bottom: none;
@@ -197,12 +197,12 @@
 
 .info-label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #666;
 }
 .info-val {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-main);
+  color: #1d1d1f;
 }
 
 /* --- 3. Footer Actions --- */
@@ -211,7 +211,7 @@
   justify-content: flex-end;
   gap: 12px;
   padding-top: 20px;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid #f0f0f0;
 }
 
 .btn-action {
@@ -219,7 +219,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -228,22 +228,20 @@
 }
 
 .btn-action.edit {
-  background: var(--color-primary);
+  background: #0071e3;
   color: white;
 }
 .btn-action.edit:hover {
-  background: var(--color-primary-hover);
+  background: #0077ed;
   transform: translateY(-1px);
 }
 
 .btn-action.delete {
-  background: var(--status-danger-bg);
-  color: var(--status-danger-text);
+  background: #fff0f0;
+  color: #d11a1a;
 }
 .btn-action.delete:hover {
-  background: #ffe5e5; /* keeping hex for hover logic or add variable if needed, using generic light red */
-  background: var(--status-danger-bg); /* simplifying to bg since I didn't define hover for danger */
-  filter: brightness(0.95);
+  background: #ffe5e5;
 }
 
 /* Responsive */

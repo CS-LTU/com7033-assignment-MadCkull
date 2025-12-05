@@ -17,10 +17,10 @@
   max-height: 900px;
 
   /* Mac Glassmorphism Base */
-  background: var(--bg-app);
-  border-radius: var(--radius-lg); /* Slightly larger radius */
-  box-shadow: 0 0 0 1px var(--border-medium),
-    /* Border definition */ 0 25px 50px -12px var(--bg-overlay); /* Deep shadow */
+  background: #ffffff;
+  border-radius: 16px; /* Slightly larger radius */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04),
+    /* Border definition */ 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Deep shadow */
 
   /* Initial State (Hidden) */
   opacity: 0;
@@ -57,9 +57,9 @@
 /* --- 3. The Global Shell Header --- */
 .shell-header {
   height: 56px;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-medium);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,24 +75,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: #555;
   transition: all 0.2s ease;
 }
 
 .shell-back-btn:hover {
-  background: var(--bg-overlay);
-  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
 }
 
 .shell-title {
-  font-family: var(--font-family);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-main);
+  color: #1d1d1f;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -104,7 +104,7 @@
   flex-grow: 1;
   position: relative; /* For sliding absolute children */
   overflow: hidden; /* Hide overflow during transitions */
-  background: var(--bg-secondary);
+  background: #fff;
 }
 
 /* The actual scrollable container injected by JS */
@@ -116,13 +116,13 @@
 
   /* Scrollbar Styling */
   scrollbar-width: thin;
-  scrollbar-color: var(--bg-overlay) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 .view-scroll-container::-webkit-scrollbar {
   width: 8px;
 }
 .view-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--bg-overlay);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
 
@@ -169,6 +169,6 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--status-danger-text);
+  color: #ff5f57;
   text-align: center;
 }
