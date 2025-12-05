@@ -1,0 +1,101 @@
+<div class="dashboard-container">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">Stroke Risk Analytics</h1>
+      <p class="dash-subtitle">Real-time patient triage & risk assessment</p>
+    </div>
+    <div class="dash-date-badge">
+      <span class="material-icons" style="font-size: 16px">calendar_today</span>
+      <span id="currentDateDisplay">Loading...</span>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="stat-card">
+      <div class="stat-icon-box bg-blue">
+        <span class="material-icons">groups</span>
+      </div>
+      <div>
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-value" id="kpiTotal">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-box bg-red">
+        <span class="material-icons">warning</span>
+      </div>
+      <div>
+        <div class="stat-label">Critical Risk (>20%)</div>
+        <div class="stat-value" id="kpiHighRisk">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-box bg-primary">
+        <span class="material-icons">water_drop</span>
+      </div>
+      <div>
+        <div class="stat-label">Avg. Glucose</div>
+        <div class="stat-value" id="kpiGlucose">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-box bg-orange">
+        <span class="material-icons">smoking_rooms</span>
+      </div>
+      <div>
+        <div class="stat-label">Active Smokers</div>
+        <div class="stat-value" id="kpiSmokers">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-panel main-chart">
+      <div class="panel-header">
+        <h3>Metabolic Risk Matrix</h3>
+        <span class="panel-subtitle">BMI vs Glucose vs Risk Level</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="metabolicChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-panel side-chart">
+      <div class="panel-header">
+        <h3>Work & Health</h3>
+        <span class="panel-subtitle">Distribution by Work Type</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="workChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <div class="panel-header">
+      <h3 style="color: var(--danger)">High Priority Watchlist (Top 5)</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>PATIENT NAME</th>
+            <th>AGE / GENDER</th>
+            <th>CONDITIONS</th>
+            <th>GLUCOSE</th>
+            <th>STROKE RISK</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody id="riskTableBody">
+          <tr>
+            <td colspan="6" style="text-align: center">Loading Data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

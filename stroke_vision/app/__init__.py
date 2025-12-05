@@ -63,6 +63,10 @@ def create_app():
 
     app.register_blueprint(user_manager_bp)
 
+    from app.views.dashboard import dashboard_bp
+
+    app.register_blueprint(dashboard_bp)
+
     # Connect to MongoDB
     connect(host=app.config["MONGO_URI"])
 

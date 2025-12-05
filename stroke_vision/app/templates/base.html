@@ -96,7 +96,15 @@
       href="{{ url_for('static', filename='css/user_manager.css') }}"
     />
 
+    <!-- Move: -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+
     {% block extra_css %}{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 
@@ -138,6 +146,10 @@
     ></script>
     <script
       src="{{ url_for('static', filename='js/user_manager.js') }}"
+      defer
+    ></script>
+    <script
+      src="{{ url_for('static', filename='js/dashboard.js') }}"
       defer
     ></script>
 

@@ -100,6 +100,8 @@
       url = "/settings/view"; // Assumed setting view
     } else if (viewId === "users") {
       url = "/admin/users/view"; // New consolidated User Manager View
+    } else if (viewId === "dashboard") {
+      url = "/dashboard/view";
     } else if (viewId === "search") {
       // For search, we hide the shell, so no load is needed.
       if (previousView && previousView !== "search") {
@@ -135,6 +137,10 @@
       // If we are on the users panel, ensure its init script runs
       if (viewId === "users" && window.userManager) {
         window.userManager.init();
+      }
+
+      if (viewId === "dashboard" && window.dashboard) {
+        window.dashboard.init();
       }
     }
 
