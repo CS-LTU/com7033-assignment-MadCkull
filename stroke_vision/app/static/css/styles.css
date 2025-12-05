@@ -7,9 +7,9 @@ body {
 
 /* Base Styles */
 body {
-  font-family: "Inter", sans-serif;
-  background-color: var(--background);
-  color: var(--text);
+  font-family: var(--font-family);
+  background-color: var(--bg-app);
+  color: var(--text-main);
   margin: 0;
   max-height: 100vh;
 
@@ -17,8 +17,7 @@ body {
 }
 
 /* Layout */
-.main-content {
-}
+/* .main-content removed (empty) */
 
 .centered-content {
   display: flex;
@@ -48,19 +47,19 @@ body {
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-normal);
   border: none;
   outline: none;
   text-decoration: none;
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background-color: var(--color-primary);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--secondary);
+  background-color: var(--color-primary-hover);
 }
 
 .btn-block {
@@ -76,7 +75,7 @@ body {
 
 .form-group label {
   font-weight: 500;
-  color: var(--text);
+  color: var(--text-main);
 }
 
 .input-icon {
@@ -88,7 +87,7 @@ body {
 .input-icon .material-icons {
   position: absolute;
   left: var(--spacing-md);
-  color: var(--icon);
+  color: var(--color-primary);
 }
 
 .input-icon input,
@@ -96,17 +95,17 @@ body {
   width: 100%;
   padding: var(--spacing-md);
   padding-left: 2.75rem;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: var(--transition);
+  background: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  transition: var(--transition-normal);
   outline: none;
 }
 
 .input-icon input:focus,
 .input-icon select:focus {
-  border-color: var(--primary);
-  box-shadow: 2px 5px 9px -4px var(--shadow);
+  border-color: var(--color-primary);
+  box-shadow: 2px 5px 9px -4px var(--shadow-sm);
 }
 
 .form-actions {
@@ -118,9 +117,9 @@ body {
 
 /* Toast Notifications */
 .custom-toast {
-  border-radius: var(--radius-lg) !important;
-  bottom: var(--spacing-lg) !important;
-  right: var(--spacing-lg) !important;
+  border-radius: var(--radius-md) !important;
+  bottom: 2rem !important; /* replaced var(--spacing-lg) */
+  right: 2rem !important; /* replaced var(--spacing-lg) */
 }
 
 /* lol */
@@ -161,9 +160,9 @@ body {
 /* Toast Notifications */
 .custom-toast {
   position: fixed;
-  bottom: var(--spacing-lg) !important;
-  right: var(--spacing-lg) !important;
+  bottom: 2rem !important;
+  right: 2rem !important;
   border-radius: var(--radius-md) !important;
-  padding: var(--spacing-md) var(--spacing-lg) !important;
-  background: var(--primary) !important;
+  padding: 1rem 1.5rem !important; /* spacing-md spacing-lg replacement */
+  background: var(--color-primary) !important;
 }

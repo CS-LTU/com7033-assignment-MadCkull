@@ -11,14 +11,14 @@
 }
 
 .auth-card {
-  background: var(--surface);
+  background: var(--bg-card);
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px var(--shadow);
+  box-shadow: var(--shadow-md);
 }
 
 .auth-subtitle {
-  color: var(--text-light);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -31,11 +31,11 @@
 .auth-footer {
   text-align: center;
   margin-top: var(--spacing-lg);
-  color: var(--text-light);
+  color: var(--text-secondary);
 }
 
 .auth-footer a {
-  color: var(--primary);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }

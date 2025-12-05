@@ -1,9 +1,10 @@
 :root {
-  --navBar-bg: #ffffff;
-  --navBar-fg: #09090b;
-  --navBar-muted: #f4f4f5;
-  --navBar-border: #e4e4e7;
-  --navBar-ring: #a1a1aa;
+  /* Using global vars */
+  --navBar-bg: var(--bg-app);
+  --navBar-fg: var(--text-main);
+  --navBar-muted: var(--bg-secondary);
+  --navBar-border: var(--border-medium);
+  --navBar-ring: var(--text-tertiary);
   --navBar-radius: 999px;
   --navBar-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --navBar-speed: 0.3s;
@@ -56,7 +57,7 @@
   cursor: none;
 }
 .tab-btn.active[aria-label="Logout"] {
-  background-color: #ff87873d;
+  background-color: var(--status-danger-bg);
 }
 
 .tab-btn:focus-visible {
