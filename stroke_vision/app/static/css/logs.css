@@ -1,10 +1,9 @@
 /* logs.css */
 
 .log-view-container {
-    padding: var(--spacing-lg);
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 80px); /* Adjust for toolbar/header */
+    height: calc(77.7vh); /* Adjust for toolbar/header */
     box-sizing: border-box;
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -15,14 +14,14 @@
     align-items: center;
     margin-bottom: var(--spacing-md); /* Reduced spacing */
     padding-bottom: var(--spacing-sm);
-    border-bottom: 1px solid var(--divider);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .header-title {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    color: var(--primary);
+    color: var(--color-primary);
 }
 
 .header-title h2 {
@@ -39,10 +38,7 @@
 .log-table-wrapper {
     flex: 1;
     overflow-y: auto;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    position: relative;
+    background: var(--bg-card);
 }
 
 /* Table Base */
@@ -55,7 +51,7 @@
 
 /* Header */
 .log-table th {
-    background: var(--surface);
+    background: var(--bg-card);
     padding: var(--spacing-sm) var(--spacing-md);
     text-align: left;
     font-weight: 600;
@@ -63,7 +59,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid var(--divider);
+    border-bottom: 1px solid var(--border-light);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Slight shadow for sticky header */
 }
 
@@ -76,17 +72,37 @@
 .log-table td {
     padding: var(--spacing-sm) var(--spacing-md); /* Compact padding */
     border-bottom: 1px solid rgba(0,0,0,0.05);
-    color: var(--text);
+    color: var(--text-main);
     vertical-align: top;
 }
 
-/* Full Row Color Coding (Backgrounds) */
-/* Using rgba for transparency over white background */
-.log-level-0 { background-color: rgba(255, 255, 255, 1); } /* Debug - White */
-.log-level-1 { background-color: rgba(108, 189, 137, 0.1); } /* Info - Green Tint */
-.log-level-2 { background-color: rgba(242, 187, 101, 0.15); } /* Warning - Orange Tint */
-.log-level-3 { background-color: rgba(235, 135, 125, 0.15); } /* Error - Red Tint */
-.log-level-4 { background-color: rgba(235, 135, 125, 0.3); } /* Critical - Darker Red Tint */
+/* Message Level Color Coding */
+.log-message-text {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.log-level-0 { 
+    color: var(--status-neutral-text);
+} /* Debug */
+
+.log-level-1 { 
+    color: var(--status-success-text);
+} /* Info */
+
+.log-level-2 { 
+    color: var(--status-warning-text);
+} /* Warning */
+
+.log-level-3 { 
+    color: var(--status-danger-text);
+} /* Error */
+
+.log-level-4 { 
+    color: var(--status-critical-text);
+} /* Critical */
 
 /* Column: Timestamp */
 .col-timestamp {
@@ -95,12 +111,12 @@
 
 .log-date {
     font-weight: 500;
-    color: var(--text);
+    color: var(--text-main);
 }
 
 .log-time {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 /* Column: User */
@@ -110,18 +126,19 @@
 
 .log-user-name {
     font-weight: 600;
-    color: var(--text);
+    color: var(--text-main);
 }
 
 .log-user-role {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 /* Column: Message */
 .col-message {
     /* Takes remaining width */
+    flex: 1; /* Added flex: 1 to ensure it takes remaining width as comment suggests */
 }
 
 .log-message-text {
@@ -143,7 +160,7 @@
 
 .log-client-ip {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--text-tertiary);
     font-family: monospace;
 }
 
@@ -156,7 +173,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--primary);
+    color: var(--color-primary);
 }
 
 .empty-state {
@@ -165,7 +182,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     padding: var(--spacing-xl);
 }
 

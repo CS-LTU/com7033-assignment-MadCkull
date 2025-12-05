@@ -20,11 +20,10 @@
   align-items: flex-end;
   padding: 10px;
   gap: 12px;
-  background-color: #f9fafb; /* gray-50 */
+  background-color: var(--bg-secondary); /* gray-50 */
   border-radius: 24px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-md);
   height: 64px; /* Base height */
   transition: height 0.2s ease;
   box-sizing: border-box; /* Ensure padding doesn't affect width calculations */
@@ -39,7 +38,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: #e5e7eb; /* gray-200 */
+  background-color: var(--bg-secondary); /* Keeping specific gray for dock items */
   cursor: pointer;
   transition: width 0.1s ease, height 0.1s ease, transform 0.1s ease;
   will-change: width, height, transform;
@@ -49,7 +48,7 @@
 .dock-icon {
   width: 50%;
   height: 50%;
-  color: #525252; /* neutral-600 */
+  color: var(--text-secondary); /* neutral-600 */
   pointer-events: none;
 }
 
@@ -60,9 +59,9 @@
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   opacity: 0;
-  background-color: #f3f4f6; /* gray-100 */
-  border: 1px solid #e5e7eb;
-  color: #374151; /* neutral-700 */
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-main);
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;

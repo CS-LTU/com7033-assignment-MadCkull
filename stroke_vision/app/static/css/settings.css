@@ -13,7 +13,9 @@
   align-items: center;
   margin-bottom: 40px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .hero-left {
@@ -36,10 +38,10 @@
 }
 
 .hero-name {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family);
   font-size: 24px;
   font-weight: 700;
-  color: #1d1d1f;
+  color: var(--text-main);
   margin: 0 0 4px 0;
 }
 
@@ -48,22 +50,22 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #86868b;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .role-badge {
-  background: #f5f5f7;
+  background: var(--bg-secondary);
   padding: 2px 8px;
   border-radius: 6px;
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.05em;
-  color: #1d1d1f;
+  color: var(--text-main);
 }
 
 .meta-dot {
-  color: #d2d2d7;
+  color: var(--border-medium);
 }
 
 /* --- Layout Grid --- */
@@ -81,11 +83,11 @@
 
 /* --- Cards --- */
 .setting-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
 }
@@ -98,7 +100,7 @@
 }
 
 .card-icon {
-  color: #5e5ce6; /* Distinct purple-ish accent for settings */
+  color: var(--color-primary); /* Use primary instead of custom purple for consistency */
   font-size: 20px;
 }
 
@@ -106,7 +108,7 @@
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-main);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -127,17 +129,17 @@
 .input-group label {
   font-size: 13px;
   font-weight: 500;
-  color: #1d1d1f;
+  color: var(--text-main);
 }
 
 .modern-input {
   height: 40px;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
   padding: 0 12px;
   font-size: 14px;
   font-family: inherit;
-  color: #1d1d1f;
+  color: var(--text-main);
   transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
@@ -145,20 +147,20 @@
 
 .modern-input:focus {
   outline: none;
-  border-color: #5e5ce6;
+  border-color: var(--color-primary); /* Use primary */
   box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.15);
 }
 
 .modern-input.readonly {
-  background-color: #f5f5f7;
-  color: #86868b;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
   cursor: not-allowed;
-  border-color: #e5e5ea;
+  border-color: var(--border-medium);
 }
 
 .helper-text {
   font-size: 11px;
-  color: #86868b;
+  color: var(--text-secondary);
   margin-top: -4px;
 }
 
@@ -180,7 +182,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -189,22 +191,22 @@
 }
 
 .btn-action.save {
-  background: #0071e3;
+  background: var(--color-primary);
   color: white;
 }
 
 .btn-action.save:hover {
-  background: #0077ed;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
 .btn-action.warning {
-  background: #fff0f0;
-  color: #d11a1a;
-  border: 1px solid #ffe5e5;
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-bg);
 }
 
 .btn-action.warning:hover {
-  background: #ffe5e5;
+  background: var(--status-danger-bg);
   transform: translateY(-1px);
 }

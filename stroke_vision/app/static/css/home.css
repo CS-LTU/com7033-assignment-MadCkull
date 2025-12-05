@@ -12,11 +12,11 @@
 
 .welcome-logo .material-icons {
   font-size: 3rem;
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .welcome-text {
-  color: var(--text-light);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-lg);
 }
 

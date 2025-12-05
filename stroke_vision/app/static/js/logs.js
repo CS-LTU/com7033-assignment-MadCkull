@@ -61,7 +61,7 @@
 
         data.forEach(log => {
         const tr = document.createElement("tr");
-        tr.className = `log-row log-level-${log.log_level}`;
+        tr.className = `log-row`;
 
                 // --- 1. Timestamp Parsing ---
         const dateObj = new Date(log.timestamp);
@@ -114,7 +114,7 @@
                          <div class="log-user-role">${userRole}</div>
                     </td>
                     <td class="col-message">
-                        <div class="log-message-text">${message}</div>
+                        <div class="log-message-text log-level-${log.log_level}">${message}</div>
                     </td>
                     <td class="col-client">
                         <div class="log-client-os">${clientOS}</div>
