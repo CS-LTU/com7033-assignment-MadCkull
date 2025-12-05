@@ -246,10 +246,27 @@ Experience the power of StrokeVision in seconds.
     The script will handle:
 
     - Environment Creation & Activation
+    - Requirments & Dependancies Installation
     - Launches the application server automatically
       - The application will be available at `http://127.0.0.1:5000`
 
 ---
+
+### Running Tests:
+
+- Just run following command:
+
+```bash
+python -m pytest tests/ -v
+```
+
+---
+
+## Checklist
+
+<div>
+  <img src="/docs/Assets/Checklist.png" height=auto alt="Project Structure Overview">
+</div>
 
 <!-- ## 🤝 Contributing
 
@@ -269,10 +286,11 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 --- -->
 
+---
+
 <div align="center">
 
 **Developed by MadCkull**
-<br>
 &copy; 2025 StrokeVision. All Rights Reserved.
 
 </div>

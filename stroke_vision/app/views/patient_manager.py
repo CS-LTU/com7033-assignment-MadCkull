@@ -319,7 +319,7 @@ def patient_form(patient_id):
                 patient.patient_id = IDGenerator.generate_id()
                 patient.record_entry_date = datetime.now()
                 patient.created_by = (
-                    current_user.username
+                    current_user.name
                 )
 
             patient.name = data["name"]
@@ -527,19 +527,19 @@ def predict_risk():
         ), 500
 
 
-@patient_bp.route("/delete/<patient_id>", methods=["POST"])
+@patient_bp.route("/api/delete/<patient_id>", methods=["DELETE"])
 @login_required
 def delete_patient(patient_id):
     try:
-        if current_user.role != "admin":
+        if current_user.role != "Doctor":
             log_security(
-                f"Unauthorized delete attempt for patient {patient_id} by user {current_user.username}",
+                f"Unauthorized delete attempt for patient {patient_id} by user {current_user.name}",
                 level=3,
             )
             return jsonify(
                 {
                     "success": False,
-                    "message": "Unauthorized: Only admins can delete records",
+                    "message": "You Don't Have Permission to Delete This Patient",
                 }
             ), 403
 

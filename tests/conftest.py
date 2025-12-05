@@ -1,4 +1,6 @@
 # tests/conftest.py
+import os
+import sys
 import pytest
 from mongoengine import connect, disconnect
 import mongomock
@@ -6,6 +8,11 @@ from datetime import datetime
 import pickle
 from pathlib import Path
 import tensorflow as tf
+
+# Add the project root and stroke_vision directory to python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../stroke_vision')))
+
 from app import create_app, db
 from app.models.user import User
 
@@ -26,14 +33,22 @@ def setup_db():
 @pytest.fixture
 def model():
     """Load the trained model"""
-    model_path = Path("../app/static/models/stroke_vision_model_Final.keras")
+    # Assuming project structure: project_root/tests/conftest.py
+    # and project_root/stroke_vision/app/static/models/...
+    root_dir = Path(__file__).parent.parent
+    model_path = root_dir / "stroke_vision" / "app" / "static" / "models" / "stroke_vision_model_Final.keras"
+    # Fallback for different structure if needed, but this matches observed structure
+    if not model_path.exists():
+         # Try without stroke_vision prefix if app is top level? But we saw it is nested.
+         pass
     return tf.keras.models.load_model(model_path)
 
 
 @pytest.fixture
 def preprocessors():
     """Load the preprocessors"""
-    preprocessor_path = Path("../app/static/models/preprocessors.pkl")
+    root_dir = Path(__file__).parent.parent
+    preprocessor_path = root_dir / "stroke_vision" / "app" / "static" / "models" / "preprocessors.pkl"
     with open(preprocessor_path, "rb") as f:
         return pickle.load(f)
 
