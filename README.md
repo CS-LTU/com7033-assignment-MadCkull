@@ -14,6 +14,32 @@
 
 ---
 
+# Project UI
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td colspan="2" width="100%"  style="border: solid transparent">
+      <img src="docs/Assets/ProjectUI/Home.png" width="100%" style="display: block;" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%"  style="border: solid transparent">
+      <img src="docs/Assets/ProjectUI/Dashboard.png" width="100%" style="display: block;" />
+    </td>
+    <td width="50%"  style="border: solid transparent">
+      <img src="docs/Assets/ProjectUI/Login.png" width="100%" style="display: block;" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%"  style="border: solid transparent">
+      <img src="docs/Assets/ProjectUI/PatientList.png" width="100%" style="display: block;" />
+    </td>
+    <td width="50%"  style="border: solid transparent">
+      <img src="docs/Assets/ProjectUI/ActivityLog.png" width="100%" style="display: block;" />
+    </td>
+  </tr>
+</table>
+
 ## 📌 Overview
 
 StrokeVision is a comprehensive web-based clinical support tool built for educational purposes. It empowers authenticated healthcare staff to:

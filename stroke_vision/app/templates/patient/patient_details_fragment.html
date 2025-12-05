@@ -1,7 +1,3 @@
-<!-- 
-  Patient Details Fragment 
-  IMPORTANT: Do NOT extend 'home.html'. This is injected dynamically.
--->
 <div class="details-view-container">
   <!-- 1. Top Identity Section -->
   <div class="details-hero">
@@ -52,14 +48,12 @@
       </div>
 
       <div class="vitals-grid">
-        <!-- BMI -->
         <div class="vital-item">
           <label>BMI</label>
           <div class="vital-value">{{ "%.1f"|format(patient.bmi) }}</div>
           <div class="vital-status normal">Body Mass Index</div>
         </div>
 
-        <!-- Glucose -->
         <div class="vital-item">
           <label>Avg Glucose</label>
           <div class="vital-value">
@@ -68,7 +62,6 @@
           <div class="vital-status">mg/dL</div>
         </div>
 
-        <!-- Heart Status -->
         <div class="vital-item">
           <label>Heart Disease</label>
           <div
@@ -78,7 +71,6 @@
           </div>
         </div>
 
-        <!-- Hypertension -->
         <div class="vital-item">
           <label>Hypertension</label>
           <div
@@ -88,11 +80,9 @@
           </div>
         </div>
 
-        <!-- Stroke Risk -->
         <div class="vital-item">
           <h3>Stroke Risk</h3>
         </div>
-        <!-- Stroke Risk -->
         <div class="vital-item">
           <!-- Uses the 'risk_class' calculated in Python -->
           <div class="risk-badge-large {{ patient.risk_class }}">

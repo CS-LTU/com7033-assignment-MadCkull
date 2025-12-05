@@ -8,15 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buttons.forEach((btn) => {
     btn.addEventListener("mouseenter", () => {
-      // Collapse all buttons first (accordion behavior)
       buttons.forEach((b) => b.classList.remove("active"));
-
-      // Activate the hovered button
       btn.classList.add("active");
     });
   });
 
-  // Remove active state when mouse leaves navBarComponent entirely
   navBarComponent.addEventListener("mouseleave", () => {
     buttons.forEach((b) => b.classList.remove("active"));
   });

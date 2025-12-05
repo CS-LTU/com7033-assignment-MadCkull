@@ -20,20 +20,15 @@ stroke_predictor = StrokePredictor()
 
 
 def is_ajax_request():
-    """
-    Checks if the request is an AJAX request from the client-side router
-    by checking the 'X-Requested-With' header set by app_router.js.
-    """
+    """Checks if the request is an AJAX request."""
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 def map_binary_to_yes_no(value):
-    """Convert '0'/'1' to 'No'/'Yes'"""
     return "Yes" if value == "1" else "No"
 
 
 def map_smoking_status(status):
-    """Map form smoking status to MongoDB expected format"""
     mapping = {
         "formerly smoked": "Formerly Smoked",
         "never smoked": "Never Smoked",
@@ -44,7 +39,6 @@ def map_smoking_status(status):
 
 
 def map_work_type(work):
-    """Map form work type to MongoDB expected format"""
     mapping = {
         "Private": "Private",
         "Self-employed": "Self-Employed",
@@ -56,17 +50,14 @@ def map_work_type(work):
 
 
 def map_residence_type(residence):
-    """Map form residence type to MongoDB expected format."""
     return "Urban" if residence == "Urban" else "Rural"
 
 
 def map_gender(gender):
-    """Map form gender to MongoDB expected format, handling 'Other'."""
     return "Other" if gender == "Other" else gender
 
 
 def get_risk_level(risk_percentage):
-    """Get risk level based on percentage"""
     if risk_percentage < 20:
         return "Low"
     elif risk_percentage < 40:
@@ -79,7 +70,6 @@ def get_risk_level(risk_percentage):
         return "Critical"
 
 
-# --- Helper to determine CSS class based on risk ---
 def get_risk_class(risk_level):
     if risk_level in ["Critical", "Very High"]:
         return "risk-critical"
@@ -91,7 +81,6 @@ def get_risk_class(risk_level):
         return "risk-low"
 
 
-# Custom JSON encoder to handle numpy types
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(
@@ -120,50 +109,44 @@ class NumpyEncoder(json.JSONEncoder):
 
 # =======================================================
 # DATA API ENDPOINT (For client-side data fetching)
-# Full URL: /patient/api/data
 # =======================================================
 
 
 @patient_bp.route("/api/data", methods=["GET"])
 @login_required
 def api_patient_data():
-    """Fetches paginated patient data as JSON for the client-side list rendering."""
-    # ⚠️ ADDED: Security check to ensure this data endpoint is accessed via AJAX
+    """Fetches paginated patient data as JSON."""
+    # Security check
     if not is_ajax_request():
         log_security("Unauthorized API data access attempt.", level=3)
         return jsonify({"error": "Unauthorized access to data API"}), 403
 
     try:
         page = request.args.get("page", 1, type=int)
-        # We set a fixed limit per page for infinite scroll
         limit = 20
         skip = (page - 1) * limit
 
-        # 1. Fetch data (ordered by latest entry date)
         patients = (
             Patient.objects.order_by("-record_entry_date").skip(skip).limit(limit)
         )
         total_count = Patient.objects.count()
 
-        # Log access to patient list API (informational)
         log_activity(
             f"Accessed patient list via API (page={page}, limit={limit}).", level=1
         )
 
-        # 2. Prepare JSON response
         patient_list = []
         for patient in patients:
             patient_list.append(
                 {
-                    "id": str(patient.id),  # MongoDB internal ID
-                    "patient_id": patient.patient_id,  # User-facing ID
+                    "id": str(patient.id),
+                    "patient_id": patient.patient_id,
                     "name": patient.name,
                     "age": patient.age,
                     "gender": patient.gender,
-                    # Reuse the existing helper function
                     "risk_level": get_risk_level(patient.stroke_risk),
                     "added_on": patient.record_entry_date.strftime("%Y-%m-%d"),
-                    "stroke_risk": patient.stroke_risk,  # Needed for details link
+                    "stroke_risk": patient.stroke_risk,
                 }
             )
 
@@ -172,7 +155,6 @@ def api_patient_data():
                 "patients": patient_list,
                 "page": page,
                 "limit": limit,
-                # Simple check if there's more data to load
                 "has_next": (page * limit) < total_count,
                 "total_count": total_count,
             }
@@ -186,23 +168,17 @@ def api_patient_data():
         ), 500
 
 
-# =======================================================
-# NEW API VIEW ROUTES (For Client-Side Router)
-# Routes changed from /api/views/... to /views/...
-# Full URLs: /patient/views/list, /patient/views/add, etc.
-# =======================================================
+# --- View Routes ---
 
 
 @patient_bp.route("/views/list", methods=["GET"])
 @login_required
 def api_patient_list_view():
-    """Renders the HTML container/shell for the Patient List view."""
+    """Renders the HTML container for the Patient List view."""
     if not is_ajax_request():
         log_security("Unauthorized access to patient list view endpoint.", level=3)
         return jsonify({"error": "Unauthorized access to API view"}), 403
 
-    # We assume 'patient/patient_list_fragment.html' is a minimal template
-    # that doesn't extend base.html.
     return render_template("patient/patient_list_fragment.html")
 
 
@@ -218,14 +194,11 @@ def api_details_patient_view(patient_id):
         log_activity(f"Patient details requested but not found: {patient_id}", level=2)
         return jsonify({"error": "Patient not found"}), 404
 
-    # Log viewing a patient's details (sensitive patient data access)
     log_activity(f"Viewed patient details: {patient_id}", level=1)
 
-    # Calculate Risk Class for UI (matches patient_details.css)
     risk_level_str = patient.risk_level if hasattr(patient, "risk_level") else "Low"
     risk_class_str = get_risk_class(risk_level_str)
 
-    # Prepare data dictionary for the template
     patient_data = {
         "patient_id": patient.patient_id,
         "name": patient.name,
@@ -241,15 +214,13 @@ def api_details_patient_view(patient_id):
         "smoking_status": patient.smoking_status,
         "stroke_risk": patient.stroke_risk,
         "risk_level": risk_level_str,
-        "risk_class": risk_class_str,  # <--- CRITICAL: Needed for the new UI badge
+        "risk_class": risk_class_str,
         "record_entry_date": patient.record_entry_date.strftime("%b %d, %Y")
         if patient.record_entry_date
         else "N/A",
         "created_by": patient.created_by,
     }
 
-    # Render the FRAGMENT.
-    # Make sure the file on your server is named 'patient/patient_details_fragment.html'
     return render_template(
         "patient/patient_details_fragment.html", patient=patient_data
     )
@@ -260,35 +231,25 @@ def api_details_patient_view(patient_id):
 @patient_bp.route("/form/<patient_id>", methods=["GET", "POST"])
 @login_required
 def patient_form(patient_id):
-    """
-    Handles both adding a new patient and editing an existing one.
-    - GET request: Renders the form (pre-populated if patient_id is provided).
-    - POST request: Submits data for prediction and potential save.
-    """
+    """Handles both adding a new patient and editing an existing one."""
     patient = None
 
-    # --- 3.1 Handle GET Request (Form Rendering/Pre-population) ---
+    # Handle GET Request
     if request.method == "GET":
-        # Scenario 1: EDIT Patient (patient_id is provided)
+        # Edit Patient
         if patient_id:
             try:
-                # Attempt to fetch the existing patient record
                 patient = Patient.objects(patient_id=patient_id).first()
                 if not patient:
-                    # If patient not found, flash error and redirect or return error fragment
                     flash(f"Patient ID {patient_id} not found.", "warning")
                     log_security(
                         f"Attempted to edit non-existent patient: {patient_id}", level=2
                     )
-                    return redirect(url_for("home"))  # Redirect full page
+                    return redirect(url_for("home"))
 
-                # Populate the form with patient data for editing
-                # The 'obj' argument automatically sets form field values from the model object
                 form = PatientForm(obj=patient)
 
-                # Check if this is an AJAX request (client-side router)
                 if is_ajax_request():
-                    # For client-side rendering, return the HTML fragment
                     return render_template(
                         "patient/patient_form_fragment.html",
                         form=form,
@@ -296,7 +257,6 @@ def patient_form(patient_id):
                         mode="edit",
                     )
                 else:
-                    # For full page load
                     return render_template(
                         "patient/edit_patient.html", form=form, patient=patient
                     )
@@ -310,12 +270,10 @@ def patient_form(patient_id):
                 flash("Error loading patient details for editing.", "danger")
                 return redirect(url_for("home"))
 
-        # Scenario 2: ADD New Patient (patient_id is None)
+        # Add Patient
         else:
             form = PatientForm()
-            # Check if this is an AJAX request (client-side router)
             if is_ajax_request():
-                # For client-side rendering, return the HTML fragment
                 return render_template(
                     "patient/patient_form_fragment.html",
                     form=form,
@@ -323,45 +281,30 @@ def patient_form(patient_id):
                     mode="add",
                 )
             else:
-                # For full page load
                 return render_template("patient/add_patient.html", form=form)
 
-    # --- 3.2 Handle POST Request (Form Submission for Prediction/Save) ---
+    # Handle POST
     elif request.method == "POST":
         form = PatientForm()
         if not form.validate_on_submit():
-            # If validation fails, return the form with errors (useful for full page POSTs)
-
-            # Since the front-end handles form submission via JavaScript/API,
-            # we'll assume the form is generally valid, but if not, an API error
-            # response would be better than rendering HTML here.
-            # For simplicity with current setup, we proceed to prediction assuming client validation passed.
-            # If the client side submits via a standard POST without AJAX,
-            # this section would need to return a fully rendered page with errors.
             pass
 
         try:
-            # Get the patient_id from the form (it's a hidden field in the edit form)
             patient_id_from_form = request.form.get("patient_id")
 
-            # 1. Prepare data for prediction
             data = form.data
 
-            # Remove non-feature fields and map boolean strings
             input_features = {
                 k: v
                 for k, v in data.items()
                 if k not in ["csrf_token", "submit", "patient_id"]
             }
 
-            # 2. Get prediction
             risk_percent, risk_level = stroke_predictor.predict_risk(input_features)
 
-            # 3. Determine if this is ADD or EDIT
             is_edit = patient_id_from_form is not None and patient_id_from_form != ""
 
             if is_edit:
-                # EDIT: Fetch existing patient
                 patient = Patient.objects(patient_id=patient_id_from_form).first()
                 if not patient:
                     log_activity(
@@ -372,15 +315,13 @@ def patient_form(patient_id):
                         {"success": False, "message": "Patient not found for update"}
                     ), 404
             else:
-                # ADD: Create a new Patient object
                 patient = Patient()
                 patient.patient_id = IDGenerator.generate_id()
                 patient.record_entry_date = datetime.now()
                 patient.created_by = (
                     current_user.username
-                )  # Assuming username is available
+                )
 
-            # 4. Update/Set patient object fields
             patient.name = data["name"]
             patient.gender = map_gender(data["gender"])
             patient.age = data["age"]
@@ -393,14 +334,11 @@ def patient_form(patient_id):
             patient.bmi = data["bmi"]
             patient.smoking_status = map_smoking_status(data["smoking_status"])
 
-            # Prediction results
             patient.stroke_risk = risk_percent
             patient.risk_level = risk_level
 
-            # Save to database
             patient.save()
 
-            # Log the add/update event (activity log)
             if is_edit:
                 log_activity(
                     f"Updated patient record: {patient.patient_id} (risk={risk_percent}, level={risk_level})",
@@ -412,7 +350,6 @@ def patient_form(patient_id):
                     level=1,
                 )
 
-            # 5. Return JSON response for client-side redirection/modal
             action = "updated" if is_edit else "added"
             return jsonify(
                 {
@@ -437,18 +374,13 @@ def patient_form(patient_id):
             ), 500
 
 
-# =======================================================
-# EXISTING ROUTES (Kept for form submission/legacy API)
-# (Unchanged as they don't impact the new routing scheme directly)
-# =======================================================
+# --- Legacy Routes ---
 
 
 @patient_bp.route("/predict", methods=["POST"])
 @login_required
 def predict_risk():
-    # ... (content remains the same)
     try:
-        # Extract form values (these will be the same whether Add or Edit)
         form_age = request.form.get("age")
         form_gender = request.form.get("gender")
         form_hypertension = request.form.get("hypertension")
@@ -473,35 +405,28 @@ def predict_risk():
             "smoking_status": form_smoking_status,
         }
 
-        # Get prediction
         try:
             risk_percentage = float(stroke_predictor.predict_risk(prediction_data))
             risk_level = get_risk_level(risk_percentage)
-            # Log prediction attempt (activity)
             log_activity(
                 f"Prediction computed (inline API): risk={risk_percentage}, level={risk_level}",
                 level=1,
             )
         except ValueError as e:
-            # Bad input / model error for prediction
             log_activity(f"Prediction failed due to bad input: {str(e)}", level=2)
             return jsonify({"success": False, "message": str(e)}), 400
 
-        # Check if this is an update (edit) or create (add)
-        patient_id = request.form.get("patient_id")  # hidden field from edit page
+        patient_id = request.form.get("patient_id")
 
         try:
             if patient_id:
-                # Try to update existing patient
                 patient = Patient.objects(patient_id=patient_id).first()
                 if not patient:
-                    # Fall back to create if patient_id not found
                     patient = None
             else:
                 patient = None
 
             if patient:
-                # Update fields (map form -> DB formats)
                 patient.name = request.form.get("name", patient.name)
                 patient.age = (
                     int(form_age) if form_age not in (None, "") else patient.age
@@ -524,7 +449,6 @@ def predict_risk():
                     map_smoking_status(form_smoking_status) or patient.smoking_status
                 )
 
-                # Update risk and audit fields
                 patient.stroke_risk = risk_percentage
                 # optional — set/update audit fields if you have them
                 try:
@@ -536,13 +460,11 @@ def predict_risk():
                 patient.save()
                 response_patient = patient
 
-                # Log update (activity)
                 log_activity(
                     f"Updated patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
                     level=1,
                 )
             else:
-                # Create new patient (existing behaviour)
                 new_patient = Patient(
                     patient_id=IDGenerator.generate_patient_id(),
                     name=request.form.get("name"),
@@ -565,13 +487,11 @@ def predict_risk():
                 new_patient.save()
                 response_patient = new_patient
 
-                # Log creation (activity)
                 log_activity(
                     f"Created patient via legacy /predict endpoint: {response_patient.patient_id} (risk={risk_percentage}, level={risk_level})",
                     level=1,
                 )
 
-            # Build response using custom encoder to handle numpy types
             response = {
                 "success": True,
                 "patient_id": response_patient.patient_id,
@@ -610,9 +530,7 @@ def predict_risk():
 @patient_bp.route("/delete/<patient_id>", methods=["POST"])
 @login_required
 def delete_patient(patient_id):
-    # This is already a JSON API endpoint, so no changes needed here.
     try:
-        # Check if user is admin
         if current_user.role != "admin":
             log_security(
                 f"Unauthorized delete attempt for patient {patient_id} by user {current_user.username}",
@@ -625,7 +543,6 @@ def delete_patient(patient_id):
                 }
             ), 403
 
-        # Find and delete the patient
         patient = Patient.objects(patient_id=patient_id).first()
         if not patient:
             log_activity(
@@ -635,7 +552,6 @@ def delete_patient(patient_id):
 
         patient.delete()
 
-        # Log successful deletion in security log (sensitive action)
         log_security(f"Deleted patient record: {patient_id}", level=1)
 
         return jsonify(
@@ -657,7 +573,6 @@ def delete_patient(patient_id):
 @patient_bp.route("/count", methods=["GET"])
 @login_required
 def patients_count():
-    # This is already a JSON API endpoint, so no changes needed here.
     try:
         count = Patient.objects.count()
         log_activity(f"Accessed patient count endpoint (count={count})", level=1)

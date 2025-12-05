@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Configuration
   const CONFIG = {
     baseWidth: 40,
     baseHeight: 40,
@@ -7,10 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     distance: 150,
   };
 
-  // Data for the menu items
-  // You can customize icons here. Lucide icon names required.
   const items = [
-    { title: "Home", icon: "home", action: "search" }, // Action changed to 'search' viewId
+    { title: "Home", icon: "home", action: "search" },
     { title: "Users", icon: "users", action: "users" },
     { title: "Dashboard", icon: "line-chart", action: "dashboard" },
     { title: "Activity", icon: "activity", action: "activity" },
@@ -19,14 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const dock = document.getElementById("toolbar");
 
-  if (!dock) return; // Guard clause if element doesn't exist
+  if (!dock) return;
 
-  // 1. Render the HTML structure
   items.forEach((item) => {
     const el = document.createElement("div");
     el.className = "dock-item";
 
-    // Add data attributes for navigation
     el.setAttribute("data-view-id", item.action);
 
     el.innerHTML = `
@@ -34,23 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
       <i data-lucide="${item.icon}" class="dock-icon"></i>
     `;
 
-    // Click handling: Use the global view navigation function
     el.addEventListener("click", (e) => {
-      // The action attribute now holds the viewId (e.g., 'users', 'search')
       window.handleViewNavigation(e, item.action);
     });
 
     dock.appendChild(el);
   });
 
-  // Initialize icons now that DOM is populated
   if (window.lucide) {
     window.lucide.createIcons();
   }
 
   const dockItems = dock.querySelectorAll(".dock-item");
 
-  // 2. Physics / Animation Logic
   dock.addEventListener("mousemove", (e) => {
     const mouseX = e.pageX;
 
@@ -62,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let width = CONFIG.baseWidth;
 
       if (distance > -CONFIG.distance && distance < CONFIG.distance) {
-        // Linear interpolation for magnification
         const scaleFactor = 1 - Math.abs(distance) / CONFIG.distance;
         width =
           CONFIG.baseWidth +

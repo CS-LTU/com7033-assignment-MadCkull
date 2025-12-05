@@ -86,27 +86,19 @@ class RegistrationForm(FlaskForm):
 
 @auth.route("/register", methods=["GET", "POST"])
 def register():
-    """
-    Registration:
-    - flashes validation errors when POST + invalid
-    - flashes DB/logic messages on success/failure
-    - never flashes raw exception strings to UI
-    """
+    """Handle user registration."""
     if current_user.is_authenticated:
         return redirect(url_for("home"))
 
     form = RegistrationForm()
     redirect_to = None
 
-    # Successful submit path (validated)
     if form.validate_on_submit():
         existing = User.query.filter_by(email=form.email.data).first()
         if existing:
             flash("Email already registered.", MSG["ERROR"])
             redirect_to = url_for("auth.register")
         else:
-            # Note: your code doesn't provide an Admin option so this check won't run,
-            # but keeping logic in case you reintroduce Admin later.
             if form.role.data == "Admin" and User.query.filter_by(role="Admin").first():
                 flash("Only one Admin account is allowed.", MSG["ERROR"])
                 redirect_to = url_for("auth.register")
@@ -121,13 +113,10 @@ def register():
                     db.session.add(new_user)
                     db.session.commit()
 
-                    # --- LOGGING ADDITION (Success) ---
-                    # Log successful user creation
                     log_security(
                         f"Registered new user '{new_user.name}' ({new_user.email}) with role '{new_user.role}'.",
                         3,
                     )
-                    # ----------------------------------
 
                     flash("Registration successful! Please login.", MSG["SUCCESS"])
                     redirect_to = url_for("auth.login")
@@ -139,12 +128,9 @@ def register():
                     flash("Registration failed. Please try again.", MSG["ERROR"])
                     redirect_to = url_for("auth.register")
 
-    # If POST but validation failed -> flash WTForms errors so frontend gets messages
     elif request.method == "POST" and form.errors:
-        # Iterate fields and their error messages
         for field, errors in form.errors.items():
             for err in errors:
-                # Make messages short and human-readable: "Email: Invalid email address"
                 flash(f"{field.capitalize()}: {err}", MSG["ERROR"])
 
     if redirect_to:
@@ -165,22 +151,16 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=True)
 
-            # --- LOGGING ADDITION (Success) ---
-            # Log successful login
             log_security(f"Login successful for user '{user.email}'.", 3)
-            # ----------------------------------
 
             flash("Login successful!", MSG["SUCCESS"])
             next_page = request.args.get("next")
             return redirect(next_page if next_page else url_for("home"))
 
-        # --- LOGGING ADDITION (Failure) ---
-        # Log failed login attempt
         log_security(
             f"Login failure: Invalid credentials provided for email '{form.email.data}'.",
             4,
         )
-        # ----------------------------------
 
         flash("Invalid email or password.", MSG["ERROR"])
 
@@ -189,11 +169,8 @@ def login():
 
 @auth.route("/logout")
 def logout():
-    # --- LOGGING ADDITION ---
-    # Log the action before calling logout_user(), as current_user is still available here
     if current_user.is_authenticated:
         log_security("User logged out successfully.", 1)
-    # ----------------------------------
 
     logout_user()
     flash("You have been logged out successfully.", MSG["INFO"])

@@ -3,11 +3,7 @@
 // =======================================================
 
 (function () {
-  /**
-   * Handles the delete confirmation and API call
-   */
   window.confirmDelete = async function (patientId) {
-    // Simple confirmation for now - can be replaced with a custom modal later
     if (
       !confirm(
         "Are you sure you want to delete this patient record? This action cannot be undone."
@@ -17,7 +13,6 @@
     }
 
     try {
-      // Retrieve CSRF token
       const csrfToken = document.querySelector(
         'meta[name="csrf-token"]'
       )?.content;
@@ -34,11 +29,9 @@
       const result = await response.json();
 
       if (response.ok) {
-        // Show success message (using utility function if available, else alert)
         if (window.showToast)
           window.showToast("Record deleted successfully", "success");
 
-        // Navigate back to the list
         window.handleViewNavigation(null, "list");
       } else {
         throw new Error(result.error || "Failed to delete");

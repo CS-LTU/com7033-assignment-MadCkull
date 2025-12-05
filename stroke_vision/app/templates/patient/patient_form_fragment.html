@@ -3,7 +3,6 @@
   Loaded dynamically into the Shell.
 -->
 <div class="form-view-container">
-  <!-- 1. Header Section -->
   <div class="form-hero">
     <div class="hero-left">
       <div class="hero-icon-box">
@@ -23,8 +22,6 @@
     </div>
   </div>
 
-  <!-- 2. The Form -->
-  <!-- We use a data attribute to tell JS if we are editing -->
   <form
     id="patientForm"
     class="modern-form"
@@ -32,7 +29,6 @@
   >
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-    <!-- Hidden ID for Edit Mode -->
     {% if patient %}
     <input type="hidden" name="patient_id" value="{{ patient.patient_id }}" />
     {% endif %}
@@ -105,13 +101,11 @@
       <div class="form-section">
         <h3 class="section-title">Conditions</h3>
         <div class="toggles-grid">
-          <!-- Custom Toggle for Heart Disease -->
           <div class="toggle-item">
             <label>Heart Disease</label>
             {{ form.heart_disease(class="modern-select") }}
           </div>
 
-          <!-- Custom Toggle for Hypertension -->
           <div class="toggle-item">
             <label>Hypertension</label>
             {{ form.hypertension(class="modern-select") }}

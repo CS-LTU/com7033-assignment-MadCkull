@@ -1,13 +1,9 @@
-// =======================================================
-// app_router.js (Updated with Settings and Users Routes)
-// Minimal patch: only patient endpoints adjusted to legacy URLs
-// =======================================================
+// app_router.js
 
 (function () {
   let appViewRoot;
   let searchContainer;
 
-  // Track previous view to determine animation direction
   let previousView = null;
 
   function toggleViewActive(isActive) {
@@ -21,30 +17,21 @@
     }
   }
 
-  /**
-   * Fetches content and injects it into the SHELL content area.
-   */
   async function loadServerViewIntoShell(url, viewId) {
-    // 1. Ensure the Shell Exists
     const contentArea = window.ensureShellStructure();
     if (!contentArea) return false;
 
-    // 2. Show Loader inside the content area
     contentArea.innerHTML = `
       <div class="view-error-state" style="color:#888;">
         <div class="spinner-mac" style="border-top-color:#0071e3;"></div>
       </div>`;
 
-    // 3. Update Header (Title & Back Button)
     if (window.updateShellHeader) window.updateShellHeader(viewId, previousView);
 
-    // 4. Fetch the content
     try {
-      // NOTE: We fetch the HTML content directly here, NOT JSON.
       const resp = await fetch(url, {
         credentials: "same-origin",
         headers: {
-          // Send a custom header to Flask to request partial templates
           "X-Requested-With": "XMLHttpRequest",
         },
       });
@@ -53,7 +40,6 @@
         throw new Error(`Failed to load view: ${resp.status}`);
       }
 
-      // 5. Inject the content
       const htmlContent = await resp.text();
 
       contentArea.innerHTML = `
@@ -77,29 +63,21 @@
     }
   }
 
-  /**
-   * Main function to route and render the application view.
-   */
   async function renderView(viewId, patientId = null) {
     let url = "";
 
-    // Determine the server endpoint based on the viewId
     if (viewId === "list") {
-      // legacy endpoint for patient list
       url = "/patient/views/list";
     } else if (viewId === "add" && patientId) {
-      // reuse legacy form endpoint for editing
       url = `/patient/form/${patientId}`;
     } else if (viewId === "add") {
-      // new patient form (legacy endpoint)
       url = "/patient/form";
     } else if (viewId === "details" && patientId) {
-      // legacy patient details endpoint
       url = `/patient/views/details/${patientId}`;
     } else if (viewId === "settings") {
-      url = "/settings/view"; // Assumed setting view
+      url = "/settings/view";
     } else if (viewId === "users") {
-      url = "/admin/users/view"; // New consolidated User Manager View
+      url = "/admin/users/view";
     } else if (viewId === "dashboard") {
       url = "/dashboard/view";
     } else if (viewId === "activity") {
@@ -107,7 +85,6 @@
     } else if (viewId === "changelog") {
       url = "/logs/view/changelog";
     } else if (viewId === "search") {
-      // For search, we hide the shell, so no load is needed.
       if (previousView && previousView !== "search") {
         toggleViewActive(false);
         if (window.animateShellClose) window.animateShellClose();
@@ -120,7 +97,6 @@
       url = null;
     }
 
-    // If navigating from Search (hidden), activate the UI
     if (
       !document.getElementById("appViewRoot").classList.contains("is-active")
     ) {
@@ -128,17 +104,13 @@
       if (window.animateShellOpen) window.animateShellOpen();
     }
 
-    // 2. Load the content
     const loaded = await loadServerViewIntoShell(url, viewId);
 
-    // 3. Post-load Init
     if (loaded) {
       if (viewId === "list" && window.loadPatientListAndAttachScroll) {
-        // We pass 'false' for attachScroll initially, wait for DOM render
         setTimeout(() => window.loadPatientListAndAttachScroll(1, true), 50);
       }
 
-      // If we are on the users panel, ensure its init script runs
       if (viewId === "users" && window.userManager) {
         window.userManager.init();
       }
@@ -165,7 +137,7 @@
   async function hashChangeHandler() {
     const hash = window.location.hash.substring(1);
     const parts = hash.split("/");
-    const viewId = parts[1]; // e.g. 'settings', 'list', 'add', 'users'
+    const viewId = parts[1];
     const patientId = parts[2] || null;
 
     if (viewId) {
@@ -179,14 +151,11 @@
     appViewRoot = document.getElementById("appViewRoot");
     searchContainer = document.getElementById("searchContainer");
 
-    // Initialize the router
     window.addEventListener("hashchange", hashChangeHandler);
 
-    // Initial load handling
     if (window.location.hash) {
       hashChangeHandler();
     } else {
-      // Default view on first load
       window.handleViewNavigation(null, "search");
     }
   });

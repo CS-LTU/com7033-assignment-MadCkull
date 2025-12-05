@@ -436,6 +436,62 @@ def reset_password_api(user_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+@user_manager_bp.route(
+    "/admin/api/users/delete/<int:user_id>", methods=["DELETE"]
+)
+@login_required
+def delete_user_api(user_id):
+    """Admin deletes a user (Admin only)."""
+    admin_check = ensure_admin()
+    if admin_check:
+        return admin_check
+
+    # Prevent deleting self
+    if user_id == current_user.id:
+        try:
+            log_security("Admin attempted to delete themselves (blocked).", level=2)
+        except Exception:
+            pass
+        return jsonify(
+            {"success": False, "message": "You cannot delete your own account."}
+        ), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        try:
+            log_security(
+                f"Attempted to delete user {user_id} but user not found.", level=2
+            )
+        except Exception:
+            pass
+        return jsonify({"success": False, "message": "User not found."}), 404
+
+    try:
+        user_email = user.email
+        user_name = user.name
+        db.session.delete(user)
+        db.session.commit()
+
+        try:
+            log_security(
+                f"Admin deleted user {user_name} ({user_email}) [ID: {user_id}].",
+                level=0,
+            )
+        except Exception:
+            pass
+
+        return jsonify({"success": True, "message": f"User {user_name} deleted."})
+    except Exception as e:
+        db.session.rollback()
+        # Log the error on the server side for debugging
+        print(f"Database error on delete user: {e}")
+        try:
+            log_security(f"Database error on delete user {user_id}: {e}", level=3)
+        except Exception:
+            pass
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 # =============================================================================
 # 5. ADMIN API ROUTES (Admin Self Management)
 # =============================================================================

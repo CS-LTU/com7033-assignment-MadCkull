@@ -10,14 +10,13 @@ from datetime import datetime
 
 
 class Patient(Document):
-    # Identification and Demographic Information
-    # NOTE: use min_length/max_length for strings
+    # Demographics
     patient_id = StringField(required=True, unique=True, min_length=9, max_length=9)
     name = StringField(required=True)
     age = IntField(required=True, min_value=5, max_value=120)
     gender = StringField(required=True, choices=["Male", "Female", "Other"])
 
-    # Medical and Lifestyle Information
+    # Medical & Lifestyle
     ever_married = StringField(required=True, choices=["Yes", "No"])
     work_type = StringField(
         required=True,
@@ -44,10 +43,8 @@ class Patient(Document):
     meta = {
         "collection": "patients",
         "ordering": ["-record_entry_date"],
-        # indexes: unique patient_id and a text index on name for searches
         "indexes": [
             {"fields": ["patient_id"], "unique": True},
-            # Text index on name for free-text; also helpful for case-insensitive prefix queries
             {"fields": ["$name"], "default_language": "english"},
         ],
     }

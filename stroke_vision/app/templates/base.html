@@ -32,7 +32,6 @@
       href="{{ url_for('static', filename='css/styles.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/auth_pages.css') }}"
@@ -43,60 +42,50 @@
       href="{{ url_for('static', filename='css/home.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/navBar.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/toolBar.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/settings.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/patient_form.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/patient_details.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/patient_list.css') }}"
     />
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/rootView.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/search_manager.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/user_manager.css') }}"
     />
 
-    <!-- Move: -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/dashboard.css') }}"
@@ -157,9 +146,7 @@
   </head>
   <body>
     <script>
-      // server -> JS: always a JS array (never a broken JSON string)
       window.FLASH_NOTIFICATIONS = {{ get_flashed_messages(with_categories=True) | default([]) | tojson | safe }};
-      // Immediately display notifications since Toastify is loaded in the head
       document.addEventListener("DOMContentLoaded", () => {
         if (window.FLASH_NOTIFICATIONS.length > 0 && window.handleNotifications) {
           window.handleNotifications(window.FLASH_NOTIFICATIONS);

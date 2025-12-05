@@ -3,22 +3,22 @@ from mongoengine import Document, StringField, DateTimeField, IntField
 from datetime import datetime
 
 
-# --- BASE LOG MODELS (Separate Collections) ---
+# --- Log Models ---
 
 
 class ActivityLog(Document):
     """Logs for patient-data related actions."""
 
-    # Fixed fields (handled by log_utils.py)
+    # System Fields
     timestamp = DateTimeField(default=datetime.now)
     client_ip = StringField(required=True)
     client_os = StringField()
 
-    # User context
+    # User Details
     user_name = StringField()
     user_role = StringField()
 
-    # User-defined fields
+    # Log Content
     info = StringField(required=True)
     log_level = IntField(required=True, min_value=0, max_value=4)
 
@@ -26,7 +26,7 @@ class ActivityLog(Document):
         "collection": "activity_logs",
         "ordering": ["-timestamp"],
         "indexes": [
-            ("log_level", "timestamp"),  # For filtering and sorting
+            ("log_level", "timestamp"),
         ],
     }
 
@@ -34,16 +34,16 @@ class ActivityLog(Document):
 class SecurityLog(Document):
     """Logs for user and security-related actions."""
 
-    # Fixed fields (handled by log_utils.py)
+    # System Fields
     timestamp = DateTimeField(default=datetime.now)
     client_ip = StringField(required=True)
     client_os = StringField()
 
-    # User context
+    # User Details
     user_name = StringField()
     user_role = StringField()
 
-    # User-defined fields
+    # Log Content
     info = StringField(required=True)
     log_level = IntField(required=True, min_value=0, max_value=4)
 
@@ -51,6 +51,6 @@ class SecurityLog(Document):
         "collection": "security_logs",
         "ordering": ["-timestamp"],
         "indexes": [
-            ("log_level", "timestamp"),  # For filtering and sorting
+            ("log_level", "timestamp"),
         ],
     }

@@ -1,10 +1,5 @@
-// =======================================================
-// search_manager.js (Search Bar UI and Suggestions Logic)
-// Dependencies: window.debounce, window.fetchJson, window.changePlaceholder (from utils.js)
-//               window.handleViewNavigation (from app_router.js)
-// =======================================================
+// search_manager.js
 
-// WRAP ENTIRE CODE IN IIFE TO PREVENT GLOBAL SCOPE CONFLICTS
 (function () {
   // --- CONFIG ---
   const SUGGEST_URL = "/api/patients/suggestions";
@@ -26,11 +21,8 @@
   let sugLoading = false;
 
   // =======================================================
-  // SHORTCUT HANDLER (THE FIX)
+  // SHORTCUT HANDLER
   // =======================================================
-
-  // This function was missing, causing the console error.
-  // It intercepts the click, prevents default anchor behavior, and calls the router.
   window.handleShortcutClick = function (event, viewId) {
     if (window.handleViewNavigation) {
       window.handleViewNavigation(event, viewId);
@@ -61,7 +53,6 @@
 
     el.addEventListener("click", (ev) => {
       ev.preventDefault();
-      // Use the global router function defined in app_router.js
       if (window.handleViewNavigation) {
         window.handleViewNavigation(ev, "details", item.patient_id);
       }
@@ -80,13 +71,11 @@
   }
 
   async function loadSuggestions(q, page = 1) {
-    // Rely on globally defined fetchJson
     if (sugLoading || !window.fetchJson) return;
     resultsContainer.innerHTML = "";
 
     if (!q || q.trim().length === 0) return;
 
-    // --- VALIDATION (Prevent unnecessary API calls) ---
     if (isMixed(q)) {
       showNoResults("No results for mixed input");
       return;
@@ -99,7 +88,6 @@
       showNoResults("Invalid characters");
       return;
     }
-    // --------------------------------------------------
 
     sugLoading = true;
     try {
@@ -107,7 +95,6 @@
         q.trim()
       )}&page=${page}&limit=${SUGGEST_LIMIT}`;
 
-      // Check for window.fetchJson before calling
       const data = await window.fetchJson(url);
 
       const items = data.items || [];
@@ -128,7 +115,6 @@
     }
   }
 
-  // Uses globally defined debounce helper
   const onInputDebounced = window.debounce((q) => {
     loadSuggestions(q, 1);
   }, DEBOUNCE_MS);
@@ -138,14 +124,12 @@
   // =======================================================
 
   document.addEventListener("DOMContentLoaded", () => {
-    // --- UI REFERENCES ---
     searchContainer = document.getElementById("searchContainer");
     spotlightContainer = document.getElementById("spotlightContainer");
     searchInput = document.getElementById("searchInput");
     resultsContainer = document.getElementById("resultsContainer");
     shortcuts = document.querySelectorAll(".shortcut-btn");
 
-    // CRITICAL: Check if main elements were found before proceeding
     if (!spotlightContainer || !searchInput || !searchContainer) {
       console.error(
         "Search Manager failed to initialize: One or more critical UI elements were not found."
@@ -153,7 +137,6 @@
       return;
     }
 
-    // 🌟 EXPOSE core elements globally for the router (app_router.js) to manipulate
     window.searchInput = searchInput;
     window.resultsContainer = resultsContainer;
     window.searchContainer = searchContainer;

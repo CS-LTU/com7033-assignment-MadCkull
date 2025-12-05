@@ -4,7 +4,6 @@
   It requires user_manager.js for its functionality and user_manager.css for styling.
 -->
 <div class="user-manager-container">
-  <!-- 1. Current Admin Profile (Always at the top for self-management) -->
   <div id="admin-profile-container">
     <!-- Admin profile card injected by user_manager.js -->
   </div>
@@ -12,15 +11,11 @@
   <div class="user-list-section">
     <h2>Users</h2>
 
-    <!-- 2. User List -->
     <div id="user-list-container">
       <!-- User list content injected by user_manager.js -->
     </div>
   </div>
 
-  <!-- 3. Modals for User Actions (Hidden by default) -->
-
-  <!-- Generic Action Modal for Email/Role Changes -->
   <div id="actionModal" class="modal hidden">
     <div class="modal-content">
       <h3 id="modalTitle"></h3>
@@ -31,9 +26,8 @@
           <label id="inputLabel" for="actionField"></label>
 
           <!-- Dynamic field container. JS will insert either the text input (email)
-             or the select (role). Keep an id so we can query it. -->
+             or the select (role). -->
           <div id="actionFieldContainer">
-            <!-- default: email input (keeps previous look) -->
             <input
               type="text"
               id="actionValue"

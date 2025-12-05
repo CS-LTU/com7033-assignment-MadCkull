@@ -1,4 +1,4 @@
-// main.js (Global utilities only)
+// Global Utilities
 
 /* -------------------------------------------------------
    CSRF Token Manager
@@ -10,7 +10,6 @@ class FormManager {
   }
 
   static initialize() {
-    // Inject CSRF token into every form unless disabled
     document.querySelectorAll("form:not([data-no-csrf])").forEach((form) => {
       if (!form.querySelector('input[name="csrf_token"]')) {
         const csrfToken = this.getCSRFToken();
@@ -41,7 +40,6 @@ function fetchWithCSRF(url, options = {}) {
   return fetch(url, { ...defaultOptions, ...options });
 }
 
-// Make available globally for all modules
 window.fetchWithCSRF = fetchWithCSRF;
 
 /* -------------------------------------------------------
@@ -50,7 +48,6 @@ window.fetchWithCSRF = fetchWithCSRF;
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Main.js initialized: CSRF setup complete");
 
-  // Setup CSRF on forms
   if (typeof FormManager !== "undefined") {
     FormManager.initialize();
   }

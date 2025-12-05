@@ -18,13 +18,11 @@ function createPatientRow(patient) {
   const riskClass = riskMap[patient.risk_level] || "risk-low";
 
   const row = document.createElement("div");
-  row.className = "patient-row grid-layout-7-col"; // Apply grid class here
+  row.className = "patient-row grid-layout-7-col";
 
-  // Make entire row clickable
   row.onclick = (e) =>
     window.handleViewNavigation(e, "details", patient.patient_id);
 
-  // Chevron SVG
   const chevronIcon = `<svg class="row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
 
   row.innerHTML = `
@@ -97,8 +95,6 @@ window.loadPatientListAndAttachScroll = function (
   const scrollSentinel = document.getElementById("scrollSentinel");
   const emptyMessage = document.getElementById("listEmptyMessage");
 
-  // IMPORTANT: The scrollable area is now the parent injected by root_view_manager
-  // It has class .view-scroll-container
   const scrollArea = listContainer
     ? listContainer.closest(".view-scroll-container")
     : null;
@@ -106,12 +102,6 @@ window.loadPatientListAndAttachScroll = function (
   currentPage = startPage - 1;
   hasMore = true;
   isFetching = false;
-
-  // Clear previous data if reloading
-  if (listContainer) {
-    // Keep placeholders if they exist, remove rendered rows
-    // Ideally, the server re-renders the fragment so it's fresh anyway
-  }
 
   if (observer) {
     observer.disconnect();
@@ -134,7 +124,7 @@ window.loadPatientListAndAttachScroll = function (
     };
 
     observer = new IntersectionObserver(intersectionCallback, {
-      root: scrollArea, // Observe the shell's content area
+      root: scrollArea,
       rootMargin: "200px",
       threshold: 0.1,
     });

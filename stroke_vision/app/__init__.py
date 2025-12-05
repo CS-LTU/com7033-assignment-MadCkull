@@ -45,11 +45,11 @@ def create_app():
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    # Set login view
+    # Login Manager
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "info"
 
-    # Import and register blueprints
+    # Blueprints
     from app.views.auth import auth
 
     app.register_blueprint(auth, url_prefix="/auth")
@@ -74,10 +74,10 @@ def create_app():
 
     app.register_blueprint(log_manager_bp)
 
-    # Connect to MongoDB
+    # Database
     connect(host=app.config["MONGO_URI"])
 
-    # Error handlers
+    # Error Handlers
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         try:
@@ -116,7 +116,7 @@ def create_app():
             }
         ), 500
 
-    # Add CSRF token to response headers
+    # CSRF Header
     @app.after_request
     def add_csrf_header(response):
         if "text/html" in response.headers.get("Content-Type", ""):

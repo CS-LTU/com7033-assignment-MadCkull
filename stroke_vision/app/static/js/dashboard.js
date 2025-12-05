@@ -1,4 +1,5 @@
-/* app/static/js/dashboard.js */
+// dashboard.js
+
 (function () {
   // -- Helper to render charts --
   function renderCharts(data) {
@@ -14,7 +15,6 @@
             data: data.scatter, // Expects {x, y, r}
             backgroundColor: (context) => {
               const raw = context.raw;
-              // Red if risk > 20, else Blue
               return raw && raw.risk > 20
                 ? "rgba(238, 93, 80, 0.7)"
                 : "rgba(67, 24, 255, 0.5)";
@@ -44,7 +44,6 @@
       },
     });
 
-    // 2. Work Type Doughnut Chart
     const ctx2 = document.getElementById("workChart").getContext("2d");
     const workLabels = Object.keys(data.work_distribution);
     const workValues = Object.values(data.work_distribution);
@@ -82,7 +81,6 @@
     });
   }
 
-  // -- Helper to render Table --
   function renderRiskTable(patients) {
     const tbody = document.getElementById("riskTableBody");
     tbody.innerHTML = "";
@@ -126,9 +124,7 @@
     });
   }
 
-  // -- Main Init Function --
   async function initDashboard() {
-    // Set Date
     const dateEl = document.getElementById("currentDateDisplay");
     if (dateEl)
       dateEl.innerText = new Date().toLocaleDateString("en-US", {
@@ -138,20 +134,15 @@
       });
 
     try {
-      // Fetch Data
       const data = await window.fetchJson("/dashboard/api/stats");
 
       if (data.success) {
-        // 1. Update KPIs
         document.getElementById("kpiTotal").innerText = data.kpis.total;
         document.getElementById("kpiHighRisk").innerText = data.kpis.high_risk;
         document.getElementById("kpiGlucose").innerText = data.kpis.avg_glucose;
         document.getElementById("kpiSmokers").innerText = data.kpis.smokers;
 
-        // 2. Render Charts
         renderCharts(data.charts);
-
-        // 3. Render Table
         renderRiskTable(data.table);
       }
     } catch (error) {
@@ -160,7 +151,6 @@
     }
   }
 
-  // Expose init method
   window.dashboard = {
     init: initDashboard,
   };
